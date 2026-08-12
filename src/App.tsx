@@ -12,7 +12,7 @@ import './pages/pages.css'
 
 export default function App() {
   return (
-    <BrowserRouter>
+    <BrowserRouter basename={import.meta.env.BASE_URL.replace(/\/$/, '')}>
       <Routes>
         <Route element={<AppShell />}>
           <Route index element={<Navigate to="/pedidos" replace />} />
