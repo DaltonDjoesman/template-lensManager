@@ -1,0 +1,115 @@
+# --- Dependencies ---
+node_modules/
+.pnp
+.pnp.js
+.pnpm-store/
+
+# --- Build / bundler output ---
+dist/
+dist-ssr/
+build/
+out/
+.vite/
+.turbo/
+.dev/
+dev-dist/
+*.local
+*.tsbuildinfo
+
+# --- Environment & secrets ---
+.env
+.env.*
+!.env.example
+!.env.*.example
+*.pem
+*.p12
+*.key
+serviceAccount*.json
+*-firebase-adminsdk-*.json
+firebase-service-account.json
+credentials.json
+secrets/
+
+# --- Firebase emulators / CLI ---
+.firebase/
+firebase-debug.log
+firestore-debug.log
+ui-debug.log
+pubsub-debug.log
+database-debug.log
+firebase-debug.*.log
+
+# --- Logs ---
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# --- Test / coverage ---
+coverage/
+.nyc_output/
+playwright-report/
+playwright/.cache/
+test-results/
+.vitest/
+vitest.config.ts.timestamp-*
+
+# --- Editor / IDE ---
+.idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json.example
+*.swp
+*.swo
+*~
+*.code-workspace
+
+# --- OS junk ---
+.DS_Store
+.DS_Store?
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# --- Cursor / agent / OpenSpec (local workflow, not portfolio) ---
+.cursor/
+openspec/
+.agent/
+.agents/
+.claude/
+.codex/
+.windsurf/
+.gemini/
+
+# --- Optional local tooling / caches ---
+.cache/
+.tmp/
+tmp/
+temp/
+*.tmp
+.eslintcache
+.stylelintcache
+.prettiercache
+.parcel-cache/
+.sass-cache/
+.npm/
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
+
+# --- Misc backups / patches ---
+*.bak
+*.orig
+*.rej
+*~
+
+# --- Generated screenshot frames (keep final PNG/GIF only) ---
+docs/screenshots/gif-frames/
+docs/screenshots/demo-proforma.pdf
+docs/screenshots/pdf-preview.html

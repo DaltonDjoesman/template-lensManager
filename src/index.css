@@ -1,0 +1,254 @@
+/* Lens Manager design tokens — light + prefers-color-scheme dark */
+
+:root {
+  /* Light (hue ~240–245, navy / cold silver) */
+  --bg: oklch(98.5% 0.003 245);
+  --surface: oklch(100% 0 0);
+  --fg: oklch(15% 0.03 245);
+  --muted: oklch(45% 0.015 240);
+  --border: oklch(90% 0.008 240);
+  --border-hover: oklch(82% 0.01 240);
+  --accent: oklch(24% 0.045 245);
+  --accent-hover: oklch(14% 0.035 245);
+  --accent-muted: oklch(94% 0.008 245);
+
+  --silver-light: oklch(94% 0.005 240);
+  --silver-base: oklch(86% 0.01 240);
+  --silver-dark: oklch(70% 0.015 240);
+
+  --info: oklch(55% 0.14 250);
+  --info-muted: oklch(94% 0.03 250);
+  --success: oklch(62% 0.16 145);
+  --success-muted: oklch(93% 0.03 145);
+  --warn: oklch(76% 0.15 80);
+  --warn-muted: oklch(95% 0.03 80);
+  --warn-text: oklch(35% 0.1 80);
+  --danger: oklch(58% 0.2 25);
+  --danger-muted: oklch(94% 0.03 25);
+
+  --stat-up: #34d399;
+  --stat-down: #fbbf24;
+
+  --font-display: 'Outfit', -apple-system, BlinkMacSystemFont, 'SF Pro Display', system-ui, sans-serif;
+  --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.03);
+  --shadow-md: 0 4px 12px -2px rgba(0, 0, 0, 0.05), 0 2px 6px -1px rgba(0, 0, 0, 0.03);
+  --shadow-lg: 0 12px 24px -4px rgba(0, 0, 0, 0.08), 0 4px 12px -2px rgba(0, 0, 0, 0.03);
+  --transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+
+  --navy-gradient-from: oklch(22% 0.04 245);
+  --navy-gradient-to: oklch(12% 0.03 245);
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+
+  --sidebar-width: 260px;
+  --mobile-nav-height: 60px;
+  --breakpoint-nav: 900px;
+}
+
+/* Dark tokens: forced via data-theme, or OS preference when theme = system.
+   Keep both blocks in sync. High contrast for panels/tables/CTAs. */
+html[data-theme='dark'] {
+  color-scheme: dark;
+
+  --bg: oklch(11% 0.024 245);
+  --surface: oklch(22% 0.03 245);
+  --fg: oklch(98.5% 0.003 240);
+  --muted: oklch(78% 0.015 240);
+  --border: oklch(42% 0.026 245);
+  --border-hover: oklch(55% 0.022 245);
+  /* Crisp off-white primary (dark navy text via --bg on buttons) */
+  --accent: oklch(96% 0.006 240);
+  --accent-hover: oklch(100% 0 0);
+  --accent-muted: oklch(30% 0.032 245);
+
+  --silver-light: oklch(16% 0.026 245);
+  --silver-base: oklch(28% 0.028 245);
+  --silver-dark: oklch(44% 0.022 240);
+
+  --info: oklch(78% 0.12 250);
+  --info-muted: oklch(30% 0.06 250);
+  --success: oklch(76% 0.15 145);
+  --success-muted: oklch(28% 0.05 145);
+  --warn: oklch(86% 0.12 80);
+  --warn-muted: oklch(30% 0.05 80);
+  --warn-text: oklch(92% 0.06 80);
+  --danger: oklch(74% 0.17 25);
+  --danger-muted: oklch(30% 0.06 25);
+
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.45);
+  --shadow-md: 0 4px 14px -2px rgba(0, 0, 0, 0.55), 0 2px 6px -1px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 14px 28px -4px rgba(0, 0, 0, 0.65), 0 4px 12px -2px rgba(0, 0, 0, 0.45);
+
+  --navy-gradient-from: oklch(22% 0.04 245);
+  --navy-gradient-to: oklch(11% 0.028 245);
+}
+
+@media (prefers-color-scheme: dark) {
+  html:not([data-theme='light']):not([data-theme='dark']) {
+    color-scheme: dark;
+
+    --bg: oklch(11% 0.024 245);
+    --surface: oklch(22% 0.03 245);
+    --fg: oklch(98.5% 0.003 240);
+    --muted: oklch(78% 0.015 240);
+    --border: oklch(42% 0.026 245);
+    --border-hover: oklch(55% 0.022 245);
+    --accent: oklch(96% 0.006 240);
+    --accent-hover: oklch(100% 0 0);
+    --accent-muted: oklch(30% 0.032 245);
+
+    --silver-light: oklch(16% 0.026 245);
+    --silver-base: oklch(28% 0.028 245);
+    --silver-dark: oklch(44% 0.022 240);
+
+    --info: oklch(78% 0.12 250);
+    --info-muted: oklch(30% 0.06 250);
+    --success: oklch(76% 0.15 145);
+    --success-muted: oklch(28% 0.05 145);
+    --warn: oklch(86% 0.12 80);
+    --warn-muted: oklch(30% 0.05 80);
+    --warn-text: oklch(92% 0.06 80);
+    --danger: oklch(74% 0.17 25);
+    --danger-muted: oklch(30% 0.06 25);
+
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.45);
+    --shadow-md: 0 4px 14px -2px rgba(0, 0, 0, 0.55), 0 2px 6px -1px rgba(0, 0, 0, 0.4);
+    --shadow-lg: 0 14px 28px -4px rgba(0, 0, 0, 0.65), 0 4px 12px -2px rgba(0, 0, 0, 0.45);
+
+    --navy-gradient-from: oklch(22% 0.04 245);
+    --navy-gradient-to: oklch(11% 0.028 245);
+  }
+}
+
+html[data-theme='light'] {
+  color-scheme: light;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+html {
+  color-scheme: light;
+}
+
+body {
+  background-color: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+}
+
+input,
+select,
+textarea,
+button {
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+  outline: none;
+}
+
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+button:focus-visible,
+a:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+a {
+  color: inherit;
+}
+
+.all-caps {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.mono {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.lens-logo {
+  width: 56px;
+  height: 56px;
+  border: none;
+  border-radius: 50%;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: none;
+  flex-shrink: 0;
+  background-color: transparent;
+  background-image: url('/icons/icon-192.png');
+  background-size: contain;
+  background-position: center;
+  background-repeat: no-repeat;
+  overflow: hidden;
+}
+
+.lens-logo::after,
+.lens-logo::before {
+  content: none;
+  display: none;
+}
+
+.lens-logo--sm {
+  width: 32px;
+  height: 32px;
+  box-shadow: none;
+}
+
+@keyframes toastIn {
+  from {
+    transform: translateY(10px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
