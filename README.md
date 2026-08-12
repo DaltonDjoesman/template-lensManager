@@ -2,6 +2,8 @@
 
 Portfolio demo PWA for **lens order management** — clients with delivery locations, a SPH/CYL catalog, order lifecycle (draft → confirm → complete), proforma PDFs, and a sales-by-SKU report. Data lives in the browser; no backend or login required.
 
+**Live demo:** [daltondjoesman.github.io/template-lensManager](https://daltondjoesman.github.io/template-lensManager/)
+
 ## Why
 
 Optical wholesale and lab workflows need a clear path from client → catalog SKU → confirmed order → printable document. This template shows that domain end-to-end as a self-contained demo you can open, explore, wipe, and restore — useful as a portfolio piece and as a starting point for a production adapter.
