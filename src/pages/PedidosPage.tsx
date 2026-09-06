@@ -4,16 +4,21 @@ import { Link, useNavigate } from 'react-router-dom'
 import { ViewHeader } from '../components/ui/ViewHeader'
 import { Button } from '../components/ui/Button'
 import { IconMoreHorizontal, IconPlus, IconSearch } from '../components/icons'
+import { FilterMultiSelect } from '../components/ui/FilterMultiSelect'
 import { listClients } from '../lib/clients'
 import {
+  DEFAULT_ORDER_LIST_SORT,
+  ORDER_SORT_DEFAULT_DIRECTION,
+  applyOrderListQuery,
   deleteOrder,
   duplicateOrder,
-  filterOrders,
   formatEur,
   formatOrderDate,
   listOrders,
   orderNetTotal,
   orderPieces,
+  type OrderListSort,
+  type OrderSortKey,
 } from '../lib/orders'
 import type { Client } from '../types/client'
 import {
@@ -45,15 +50,54 @@ function isCurrentMonth(isoDate: string): boolean {
   )
 }
 
+function SortableTh({
+  label,
+  sortKey,
+  sort,
+  onSort,
+  align = 'left',
+}: {
+  label: string
+  sortKey: OrderSortKey
+  sort: OrderListSort
+  onSort: (key: OrderSortKey) => void
+  align?: 'left' | 'right'
+}) {
+  const active = sort.key === sortKey
+  const ariaSort = !active
+    ? 'none'
+    : sort.direction === 'asc'
+      ? 'ascending'
+      : 'descending'
+  const indicator = !active ? '↕' : sort.direction === 'asc' ? '▲' : '▼'
+
+  return (
+    <th aria-sort={ariaSort} style={{ textAlign: align }}>
+      <button
+        type="button"
+        className="sort-header"
+        data-active={active ? 'true' : 'false'}
+        onClick={() => onSort(sortKey)}
+      >
+        {label}
+        <span className="sort-indicator" aria-hidden>
+          {indicator}
+        </span>
+      </button>
+    </th>
+  )
+}
+
 export function PedidosPage() {
   const navigate = useNavigate()
   const [orders, setOrders] = useState<Order[]>([])
   const [clients, setClients] = useState<Client[]>([])
   const [search, setSearch] = useState('')
-  const [status, setStatus] = useState<OrderStatus | ''>('')
-  const [clientId, setClientId] = useState('')
+  const [statuses, setStatuses] = useState<OrderStatus[]>([])
+  const [clientIds, setClientIds] = useState<string[]>([])
   const [dateFrom, setDateFrom] = useState('')
   const [dateTo, setDateTo] = useState('')
+  const [sort, setSort] = useState<OrderListSort>(DEFAULT_ORDER_LIST_SORT)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [toast, setToast] = useState<string | null>(null)
@@ -143,14 +187,18 @@ export function PedidosPage() {
 
   const filtered = useMemo(
     () =>
-      filterOrders(orders, {
-        search,
-        status,
-        clientId,
-        dateFrom,
-        dateTo,
-      }),
-    [orders, search, status, clientId, dateFrom, dateTo],
+      applyOrderListQuery(
+        orders,
+        {
+          search,
+          statuses,
+          clientIds,
+          dateFrom,
+          dateTo,
+        },
+        sort,
+      ),
+    [orders, search, statuses, clientIds, dateFrom, dateTo, sort],
   )
 
   const metrics = useMemo(() => {
@@ -169,10 +217,23 @@ export function PedidosPage() {
 
   function resetFilters() {
     setSearch('')
-    setStatus('')
-    setClientId('')
+    setStatuses([])
+    setClientIds([])
     setDateFrom('')
     setDateTo('')
+    setSort(DEFAULT_ORDER_LIST_SORT)
+  }
+
+  function handleSort(key: OrderSortKey) {
+    setSort((prev) => {
+      if (prev.key === key) {
+        return {
+          key,
+          direction: prev.direction === 'asc' ? 'desc' : 'asc',
+        }
+      }
+      return { key, direction: ORDER_SORT_DEFAULT_DIRECTION[key] }
+    })
   }
 
   async function handleDuplicate(order: Order) {
@@ -278,33 +339,26 @@ export function PedidosPage() {
           />
         </div>
 
-        <select
-          className="filter-select"
-          value={status}
-          onChange={(e) => setStatus(e.target.value as OrderStatus | '')}
+        <FilterMultiSelect
+          allLabel="All Statuses"
+          unitPlural="statuses"
           aria-label="Filter by status"
-        >
-          <option value="">All Statuses</option>
-          {ORDER_STATUSES.map((s) => (
-            <option key={s} value={s}>
-              {s}
-            </option>
-          ))}
-        </select>
+          selected={statuses}
+          onChange={setStatuses}
+          options={ORDER_STATUSES.map((s) => ({ value: s, label: s }))}
+        />
 
-        <select
-          className="filter-select"
-          value={clientId}
-          onChange={(e) => setClientId(e.target.value)}
+        <FilterMultiSelect
+          allLabel="All Clients"
+          unitPlural="clients"
           aria-label="Filter by client"
-        >
-          <option value="">All Clients</option>
-          {clients.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.billing.name}
-            </option>
-          ))}
-        </select>
+          selected={clientIds}
+          onChange={setClientIds}
+          options={clients.map((c) => ({
+            value: c.id,
+            label: c.billing.name,
+          }))}
+        />
 
         <div className="filter-date-group">
           <span>From</span>
@@ -340,25 +394,56 @@ export function PedidosPage() {
         <table className="data-table">
           <thead>
             <tr>
-              <th>Document No.</th>
-              <th>Client (Optician)</th>
+              <SortableTh
+                label="Document No."
+                sortKey="pedNumber"
+                sort={sort}
+                onSort={handleSort}
+              />
+              <SortableTh
+                label="Client (Optician)"
+                sortKey="clientName"
+                sort={sort}
+                onSort={handleSort}
+              />
               <th>Client PO Ref.</th>
-              <th>Order Date</th>
-              <th>Net Total</th>
-              <th>Status</th>
+              <SortableTh
+                label="Order Date"
+                sortKey="orderDate"
+                sort={sort}
+                onSort={handleSort}
+              />
+              <SortableTh
+                label="Created"
+                sortKey="createdAt"
+                sort={sort}
+                onSort={handleSort}
+              />
+              <SortableTh
+                label="Net Total"
+                sortKey="netTotal"
+                sort={sort}
+                onSort={handleSort}
+              />
+              <SortableTh
+                label="Status"
+                sortKey="status"
+                sort={sort}
+                onSort={handleSort}
+              />
               <th style={{ textAlign: 'right' }}>Actions</th>
             </tr>
           </thead>
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan={7} className="table-empty">
+                <td colSpan={8} className="table-empty">
                   Loading orders…
                 </td>
               </tr>
             ) : filtered.length === 0 ? (
               <tr>
-                <td colSpan={7} className="table-empty">
+                <td colSpan={8} className="table-empty">
                   {orders.length === 0
                     ? 'No orders yet. Create the first draft.'
                     : 'No orders match the filters.'}
@@ -382,6 +467,7 @@ export function PedidosPage() {
                   </td>
                   <td className="mono">{order.clientPo || '—'}</td>
                   <td>{formatOrderDate(order.orderDate)}</td>
+                  <td>{formatOrderDate(order.createdAt)}</td>
                   <td className="mono">{formatEur(orderNetTotal(order))}</td>
                   <td>
                     <span className={statusBadgeClass(order.status)}>

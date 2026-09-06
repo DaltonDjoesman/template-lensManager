@@ -265,13 +265,17 @@ function toStoredPayload(input: OrderInput): JsonRecord {
   return payload
 }
 
-export interface OrderListFilters {
-  status?: OrderStatus | ''
-  clientId?: string
-  dateFrom?: string
-  dateTo?: string
-  search?: string
-}
+export {
+  DEFAULT_ORDER_LIST_SORT,
+  ORDER_SORT_DEFAULT_DIRECTION,
+  applyOrderListQuery,
+  filterOrders,
+  sortOrders,
+  type OrderListFilters,
+  type OrderListSort,
+  type OrderSortDirection,
+  type OrderSortKey,
+} from './orderListQuery'
 
 export async function listOrders(): Promise<Order[]> {
   const docs = await storage.listDocs(STORAGE_COLLECTIONS.orders)
@@ -297,36 +301,6 @@ export async function listSoldOrdersInConfirmationRange(
     if (!statuses.includes(order.status)) return false
     if (!order.confirmedAt) return false
     return order.confirmedAt >= start && order.confirmedAt <= end
-  })
-}
-
-export function filterOrders(
-  orders: Order[],
-  filters: OrderListFilters,
-): Order[] {
-  const search = (filters.search ?? '').trim().toLowerCase()
-
-  return orders.filter((order) => {
-    if (filters.status && order.status !== filters.status) return false
-    if (filters.clientId && order.clientId !== filters.clientId) return false
-
-    if (filters.dateFrom && order.orderDate < filters.dateFrom) return false
-    if (filters.dateTo && order.orderDate > filters.dateTo) return false
-
-    if (search) {
-      const haystack = [
-        order.clientName,
-        order.clientNif,
-        order.clientPo,
-        order.pedNumber ?? '',
-        order.pfNumber ?? '',
-      ]
-        .join(' ')
-        .toLowerCase()
-      if (!haystack.includes(search)) return false
-    }
-
-    return true
   })
 }
 
@@ -554,7 +528,8 @@ export function formatEur(value: number): string {
 
 export function formatOrderDate(isoDate: string): string {
   if (!isoDate) return '—'
-  const [y, m, d] = isoDate.split('-')
-  if (!y || !m || !d) return isoDate
+  const day = isoDate.slice(0, 10)
+  const [y, m, d] = day.split('-')
+  if (!y || !m || !d || d.length < 2) return isoDate
   return `${d}/${m}/${y}`
 }

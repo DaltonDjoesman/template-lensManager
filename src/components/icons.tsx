@@ -148,6 +148,25 @@ export function IconMoreHorizontal(props: IconProps) {
   )
 }
 
+export function IconChevronDown(props: IconProps) {
+  return (
+    <svg
+      width="14"
+      height="14"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+      {...props}
+    >
+      <polyline points="6 9 12 15 18 9" />
+    </svg>
+  )
+}
+
 export function IconReports(props: IconProps) {
   return (
     <svg

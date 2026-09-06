@@ -12,7 +12,7 @@ Optical wholesale and lab workflows need a clear path from client → catalog SK
 
 - **Clients** with billing details, named delivery locations, and optional default discounts
 - **Catalog** of lens families (SKU, price, SPH/CYL amplitude ranges); order lines compose `{sku}_{sph}_{cyl}`
-- **Orders** across Draft / Confirmed / Completed / Cancelled, with PED/PF numbering, line and order discounts, and IVA
+- **Orders** across Draft / Confirmed / Completed / Cancelled, with PED/PF numbering, line and order discounts, IVA, multi-select status/client filters, and sortable columns
 - **Proforma PDF** generation (pdfmake) using company MDR/IVA notes
 - **Sales by SKU** report over confirmed/completed orders
 - **System / Light / Dark** theme preference
