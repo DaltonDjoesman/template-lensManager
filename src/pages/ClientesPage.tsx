@@ -7,6 +7,7 @@ import {
   clientMatchesSearch,
   deleteClient,
   formatDefaultDiscount,
+  formatPaymentTerms,
   listClients,
 } from '../lib/clients'
 import type { Client } from '../types/client'
@@ -123,19 +124,20 @@ export function ClientesPage() {
               <th>Email</th>
               <th>Phone</th>
               <th>Base Discount</th>
+              <th>Payment</th>
               <th style={{ textAlign: 'right' }}>Actions</th>
             </tr>
           </thead>
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan={7} className="table-empty">
+                <td colSpan={8} className="table-empty">
                   Loading clients…
                 </td>
               </tr>
             ) : filtered.length === 0 ? (
               <tr>
-                <td colSpan={7} className="table-empty">
+                <td colSpan={8} className="table-empty">
                   {search.trim()
                     ? 'No clients match the search.'
                     : 'No clients yet. Add the first optician.'}
@@ -156,6 +158,11 @@ export function ClientesPage() {
                   <td>
                     <span className="discount-badge-info">
                       {formatDefaultDiscount(client.defaultDiscount)}
+                    </span>
+                  </td>
+                  <td>
+                    <span className="discount-badge-info">
+                      {formatPaymentTerms(client.paymentTerms)}
                     </span>
                   </td>
                   <td style={{ textAlign: 'right' }}>

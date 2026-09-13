@@ -3,7 +3,9 @@ import type {
   TDocumentDefinitions,
   TableCell,
 } from 'pdfmake/interfaces'
-import { formatEur, formatOrderDate } from './orders'
+import { formatEur, formatOrderDate, formatOrderDateTime } from './orders'
+import { paymentTermsLabel, normalizePaymentTerms } from '../types/client'
+import { DEFAULT_COMPANY_SETTINGS } from '../types/companySettings'
 import {
   computeLineNetContributions,
   computeOrderTotals,
@@ -14,17 +16,20 @@ import {
 
 export type OrderDocumentKind = 'pedido' | 'proforma'
 
-/** Colors aligned with the order document layout. */
+/** Light paper palette — navy / ice (no teal). */
 const COLORS = {
   navy: '#1B3A5F',
-  teal: '#0D9488',
   muted: '#64748B',
+  ice: '#94A3B8',
   border: '#CBD5E1',
   panelBg: '#F1F5F9',
   headerText: '#FFFFFF',
   body: '#0F172A',
   disclaimer: '#B45309',
 }
+
+const SKONTO_RATE = 0.03
+const LOGO_FIT: [number, number] = [36, 36]
 
 type PdfMakeApi = {
   addVirtualFileSystem: (vfs: unknown) => void
@@ -34,6 +39,7 @@ type PdfMakeApi = {
 }
 
 let pdfReady: Promise<PdfMakeApi> | null = null
+let logoDataUrlReady: Promise<string | null> | null = null
 
 function resolvePdfMake(mod: unknown): PdfMakeApi {
   const record = mod as Record<string, unknown>
@@ -80,19 +86,59 @@ async function loadPdfMake(): Promise<PdfMakeApi> {
   return pdfReady
 }
 
+/** PWA icon already in this repo — never a company logo asset. */
+async function loadLogoDataUrl(): Promise<string | null> {
+  if (!logoDataUrlReady) {
+    logoDataUrlReady = (async () => {
+      try {
+        const base = import.meta.env.BASE_URL ?? '/'
+        const res = await fetch(`${base}icons/icon-192.png`)
+        if (!res.ok) return null
+        const blob = await res.blob()
+        return await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader()
+          reader.onload = () => resolve(String(reader.result))
+          reader.onerror = () =>
+            reject(reader.error ?? new Error('Failed to read demo logo.'))
+          reader.readAsDataURL(blob)
+        })
+      } catch {
+        return null
+      }
+    })()
+  }
+  return logoDataUrlReady
+}
+
 function money(value: number): string {
   return formatEur(value)
 }
 
-function labeledLine(label: string, value: string): Content {
+type TextLineOpts = {
+  fontSize?: number
+  color?: string
+  bold?: boolean
+  margin?: [number, number, number, number]
+}
+
+/** Omit empty optional fields instead of printing a dash placeholder. */
+function lineIf(
+  text: string | undefined | null,
+  opts: TextLineOpts = {},
+): Content | null {
+  const value = text?.trim()
+  if (!value) return null
   return {
-    text: [
-      { text: `${label} `, bold: true, color: COLORS.navy },
-      { text: value || '—', color: COLORS.body },
-    ],
-    fontSize: 9,
-    margin: [0, 1, 0, 1],
+    text: value,
+    fontSize: opts.fontSize ?? 9,
+    color: opts.color ?? COLORS.body,
+    bold: opts.bold,
+    margin: opts.margin ?? [0, 1, 0, 1],
   }
+}
+
+function compactStack(items: Array<Content | null | undefined>): Content[] {
+  return items.filter((item): item is Content => item != null)
 }
 
 function panelLayout() {
@@ -108,143 +154,229 @@ function panelLayout() {
   }
 }
 
-function buildHeader(order: Order, kind: OrderDocumentKind): Content {
-  const docNumber =
-    kind === 'proforma'
-      ? (order.pfNumber ?? 'PF-…')
-      : (order.pedNumber ?? 'Draft')
-  const title = kind === 'proforma' ? 'PROFORMA' : 'CUSTOMER ORDER'
+function buildBrandRow(order: Order, logoDataUrl?: string): Content {
   const c = order.company
+  const contactBits = [
+    c.nif ? `Tax ID: ${c.nif}` : '',
+    c.email ? `Email: ${c.email}` : '',
+    c.phone ? `Tel: ${c.phone}` : '',
+  ]
+    .filter(Boolean)
+    .join('  |  ')
+
+  const stack = compactStack([
+    {
+      text: c.name || DEFAULT_COMPANY_SETTINGS.name,
+      fontSize: 13,
+      bold: true,
+      color: COLORS.navy,
+    },
+    lineIf(c.address, {
+      fontSize: 8,
+      color: COLORS.muted,
+      margin: [0, 2, 0, 0],
+    }),
+    contactBits
+      ? {
+          text: contactBits,
+          fontSize: 8,
+          color: COLORS.muted,
+          margin: [0, 1, 0, 0],
+        }
+      : null,
+  ])
+
+  if (!logoDataUrl) {
+    return {
+      stack,
+      margin: [0, 0, 0, 10],
+    }
+  }
 
   return {
     columns: [
       {
-        width: '*',
-        stack: [
-          {
-            text: c.name || 'Lens Manager Demo',
-            fontSize: 13,
-            bold: true,
-            color: COLORS.navy,
-          },
-          {
-            text: c.address || '',
-            fontSize: 8,
-            color: COLORS.muted,
-            margin: [0, 3, 0, 0],
-          },
-          {
-            text: [
-              c.nif ? `Tax ID: ${c.nif}` : '',
-              c.email ? `Email: ${c.email}` : '',
-              c.phone ? `Tel: ${c.phone}` : '',
-            ]
-              .filter(Boolean)
-              .join('  |  '),
-            fontSize: 8,
-            color: COLORS.muted,
-            margin: [0, 2, 0, 0],
-          },
-        ],
+        width: LOGO_FIT[0] + 6,
+        image: 'logo',
+        fit: LOGO_FIT,
+        margin: [0, 1, 6, 0],
       },
       {
-        width: 200,
-        alignment: 'right' as const,
-        stack: [
-          {
-            text: title,
-            fontSize: 14,
-            bold: true,
-            color: COLORS.teal,
-          },
-          {
-            text: [
-              { text: 'Order No.: ', bold: true, color: COLORS.navy },
-              { text: docNumber, color: COLORS.body },
-            ],
-            fontSize: 9,
-            margin: [0, 8, 0, 0],
-          },
-          {
-            text: [
-              { text: 'Date: ', bold: true, color: COLORS.navy },
-              { text: formatOrderDate(order.orderDate), color: COLORS.body },
-            ],
-            fontSize: 9,
-            margin: [0, 2, 0, 0],
-          },
-          {
-            text: [
-              { text: 'Customer PO: ', bold: true, color: COLORS.navy },
-              {
-                text: order.clientPo
-                  ? `PO${order.clientPo.replace(/^PO/i, '')}`
-                  : '—',
-                color: COLORS.body,
-              },
-            ],
-            fontSize: 9,
-            margin: [0, 2, 0, 0],
-          },
-        ],
+        width: '*',
+        stack,
       },
     ],
+    columnGap: 4,
+    margin: [0, 0, 0, 10],
+  }
+}
+
+function formatClientPo(clientPo: string | undefined): string | null {
+  const raw = clientPo?.trim()
+  if (!raw) return null
+  return `PO${raw.replace(/^PO/i, '')}`
+}
+
+function buildIdentityStack(order: Order, kind: OrderDocumentKind): Content {
+  const po = formatClientPo(order.clientPo)
+  const termsLabel = paymentTermsLabel(normalizePaymentTerms(order.paymentTerms))
+
+  if (kind === 'proforma') {
+    const pfNumber = order.pfNumber ?? 'PF-…'
+    const dateValue = order.pfIssuedAt
+      ? formatOrderDateTime(order.pfIssuedAt)
+      : formatOrderDate(order.orderDate)
+
+    return {
+      alignment: 'right',
+      stack: compactStack([
+        {
+          text: [
+            {
+              text: 'PROFORMA',
+              fontSize: 12,
+              bold: true,
+              color: COLORS.navy,
+            },
+            { text: '  ', fontSize: 12 },
+            {
+              text: pfNumber,
+              fontSize: 16,
+              bold: true,
+              color: COLORS.navy,
+            },
+          ],
+          margin: [0, 0, 0, 4],
+        },
+        {
+          text: [
+            { text: 'Issue date: ', bold: true, color: COLORS.navy },
+            { text: dateValue, color: COLORS.body },
+          ],
+          fontSize: 9,
+          margin: [0, 2, 0, 0],
+        },
+        po
+          ? {
+              text: [
+                { text: 'Customer PO: ', bold: true, color: COLORS.navy },
+                { text: po, color: COLORS.body },
+              ],
+              fontSize: 9,
+              margin: [0, 2, 0, 0],
+            }
+          : null,
+      ]),
+      margin: [0, 0, 0, 14],
+    }
+  }
+
+  const pedNumber = order.pedNumber?.trim() || 'Draft'
+  const dateValue = order.confirmedAt
+    ? formatOrderDateTime(order.confirmedAt)
+    : formatOrderDate(order.orderDate)
+
+  return {
+    alignment: 'right',
+    stack: compactStack([
+      {
+        text: 'ORDER',
+        fontSize: 14,
+        bold: true,
+        color: COLORS.navy,
+      },
+      {
+        text: [
+          { text: 'Order No.: ', bold: true, color: COLORS.navy },
+          { text: pedNumber, color: COLORS.body },
+        ],
+        fontSize: 9,
+        margin: [0, 6, 0, 0],
+      },
+      {
+        text: [
+          { text: 'Issue date: ', bold: true, color: COLORS.navy },
+          { text: dateValue, color: COLORS.body },
+        ],
+        fontSize: 9,
+        margin: [0, 2, 0, 0],
+      },
+      {
+        text: [
+          { text: 'Payment: ', bold: true, color: COLORS.navy },
+          { text: termsLabel, color: COLORS.body },
+        ],
+        fontSize: 9,
+        margin: [0, 2, 0, 0],
+      },
+      po
+        ? {
+            text: [
+              { text: 'Customer PO: ', bold: true, color: COLORS.navy },
+              { text: po, color: COLORS.body },
+            ],
+            fontSize: 9,
+            margin: [0, 2, 0, 0],
+          }
+        : null,
+    ]),
     margin: [0, 0, 0, 14],
   }
 }
 
-function buildClientDeliveryPanel(order: Order): Content {
-  const billingStack: Content[] = [
-    {
-      text: 'BILLING DETAILS:',
-      bold: true,
-      fontSize: 9,
-      color: COLORS.navy,
-      margin: [0, 0, 0, 4],
-    },
-    labeledLine('Customer:', order.billing.name),
-    labeledLine('Tax ID:', order.billing.nif),
-    labeledLine('Contact (required):', order.billing.contactName),
-    labeledLine('Phone:', order.billing.phone),
-    labeledLine('Email:', order.billing.email),
-    labeledLine('Address:', order.billing.address),
-  ]
+function buildHeader(
+  order: Order,
+  kind: OrderDocumentKind,
+  logoDataUrl?: string,
+): Content {
+  return {
+    stack: [buildBrandRow(order, logoDataUrl), buildIdentityStack(order, kind)],
+  }
+}
 
-  const shippingStack: Content[] = [
+function buildAddressColumns(order: Order): Content {
+  const billingStack: Content[] = compactStack([
     {
-      text: 'DELIVERY LOCATION (SHIP TO):',
+      text: 'Billing',
       bold: true,
       fontSize: 9,
       color: COLORS.navy,
       margin: [0, 0, 0, 4],
     },
-    labeledLine('Recipient:', order.shipping.recipient),
-    labeledLine('C/O:', order.shipping.careOf),
-    labeledLine('Local phone:', order.shipping.phone),
-    labeledLine('Address:', order.shipping.address),
-    labeledLine('Postal code:', order.shipping.postalCode),
-  ]
+    lineIf(order.billing.name, { bold: true }),
+    lineIf(order.billing.nif ? `Tax ID: ${order.billing.nif}` : null),
+    lineIf(order.billing.contactName),
+    lineIf(order.billing.phone),
+    lineIf(order.billing.email),
+    lineIf(order.billing.address),
+  ])
+
+  const shippingStack: Content[] = compactStack([
+    {
+      text: 'Delivery',
+      bold: true,
+      fontSize: 9,
+      color: COLORS.navy,
+      margin: [0, 0, 0, 4],
+    },
+    lineIf(order.shipping.recipient, { bold: true }),
+    lineIf(order.shipping.careOf ? `C/O: ${order.shipping.careOf}` : null),
+    lineIf(order.shipping.phone),
+    lineIf(order.shipping.address),
+    lineIf(order.shipping.postalCode),
+  ])
 
   return {
-    stack: [
-      {
-        text: 'CUSTOMER & DELIVERY',
-        style: 'sectionTitle',
-        margin: [0, 0, 0, 6],
-      },
-      {
-        table: {
-          widths: ['*', '*'],
-          body: [
-            [
-              { stack: billingStack, border: [true, true, true, true] },
-              { stack: shippingStack, border: [true, true, true, true] },
-            ],
-          ],
-        },
-        layout: panelLayout(),
-      },
-    ],
+    table: {
+      widths: ['*', '*'],
+      body: [
+        [
+          { stack: billingStack, border: [true, true, true, true] },
+          { stack: shippingStack, border: [true, true, true, true] },
+        ],
+      ],
+    },
+    layout: panelLayout(),
     margin: [0, 0, 0, 14],
   }
 }
@@ -354,10 +486,7 @@ function buildLineTable(order: Order): Content {
   }
 }
 
-function buildFooterNotesAndTotals(
-  order: Order,
-  kind: OrderDocumentKind,
-): Content {
+function buildFooterNotesAndTotals(order: Order): Content {
   const totals = computeOrderTotals(order.lines, order.orderDiscount)
 
   const notes: Content[] = [
@@ -399,16 +528,6 @@ function buildFooterNotesAndTotals(
       fontSize: 7.5,
       color: COLORS.body,
       margin: [0, 4, 0, 0],
-    })
-  }
-
-  if (kind === 'proforma') {
-    notes.push({
-      text: 'This document is not a tax invoice.',
-      bold: true,
-      fontSize: 9,
-      color: COLORS.disclaimer,
-      margin: [0, 8, 0, 0],
     })
   }
 
@@ -541,26 +660,169 @@ function buildFooterNotesAndTotals(
   }
 }
 
+function buildPaymentBankBlock(order: Order): Content {
+  const totals = computeOrderTotals(order.lines, order.orderDiscount)
+  const terms = normalizePaymentTerms(order.paymentTerms)
+  const c = order.company
+  const iban = c.iban?.trim() || DEFAULT_COMPANY_SETTINGS.iban
+  const bankName = c.bankName?.trim() || DEFAULT_COMPANY_SETTINGS.bankName
+  const accountHolder =
+    c.accountHolder?.trim() || DEFAULT_COMPANY_SETTINGS.accountHolder
+  const nif = c.nif?.trim() || DEFAULT_COMPANY_SETTINGS.nif
+  const bankLine = `IBAN ${iban} | Bank: ${bankName} | Account holder: ${accountHolder} (Tax ID: ${nif})`
+  const email = c.email?.trim() || DEFAULT_COMPANY_SETTINGS.email
+  const phone = c.phone?.trim() || DEFAULT_COMPANY_SETTINGS.phone
+  const docNumber = order.pfNumber ?? '—'
+  const termsLabel = paymentTermsLabel(terms)
+
+  const stack: Content[] = [
+    {
+      text: 'Payment terms and bank details',
+      bold: true,
+      fontSize: 9,
+      color: COLORS.navy,
+      margin: [0, 0, 0, 4],
+    },
+    {
+      text: [
+        { text: 'Payment terms: ', bold: true, color: COLORS.navy },
+        { text: termsLabel, color: COLORS.body },
+      ],
+      fontSize: 8,
+      margin: [0, 0, 0, 6],
+    },
+  ]
+
+  if (terms === 'net_30') {
+    const skontoNet = money(totals.subtotalNet * (1 - SKONTO_RATE))
+    const skontoWithVat = money(totals.totalWithVat * (1 - SKONTO_RATE))
+    stack.push(
+      {
+        text: [
+          { text: 'Due: ', bold: true, color: COLORS.navy },
+          {
+            text: 'Net 30 from the issue date.',
+            color: COLORS.body,
+          },
+        ],
+        fontSize: 8,
+        margin: [0, 0, 0, 3],
+      },
+      {
+        text: [
+          {
+            text: 'Early payment (3% discount): ',
+            bold: true,
+            color: COLORS.navy,
+          },
+          {
+            text: `Discounted amount: ${skontoNet} (ex. VAT) | ${skontoWithVat} (inc. VAT), if settled within 48h of this document.`,
+            color: COLORS.body,
+          },
+        ],
+        fontSize: 8,
+        margin: [0, 0, 0, 3],
+      },
+      {
+        text: [
+          { text: 'Bank details: ', bold: true, color: COLORS.navy },
+          { text: bankLine, color: COLORS.body },
+        ],
+        fontSize: 8,
+        margin: [0, 0, 0, 3],
+      },
+      {
+        text: `(Include this Proforma number (${docNumber}) in the transfer description and send the receipt to ${email})`,
+        fontSize: 7.5,
+        italics: true,
+        color: COLORS.muted,
+        margin: [0, 2, 0, 0],
+      },
+    )
+  } else {
+    stack.push(
+      {
+        text: [
+          { text: 'Due: ', bold: true, color: COLORS.navy },
+          {
+            text: 'Due on receipt (settlement before dispatch).',
+            color: COLORS.body,
+          },
+        ],
+        fontSize: 8,
+        margin: [0, 0, 0, 3],
+      },
+      {
+        text: [
+          { text: 'Amount due: ', bold: true, color: COLORS.navy },
+          { text: money(totals.totalWithVat), color: COLORS.body },
+        ],
+        fontSize: 8,
+        margin: [0, 0, 0, 3],
+      },
+      {
+        text: [
+          { text: 'Bank details: ', bold: true, color: COLORS.navy },
+          { text: bankLine, color: COLORS.body },
+        ],
+        fontSize: 8,
+        margin: [0, 0, 0, 3],
+      },
+      {
+        text: `(Send the receipt to ${email} or WhatsApp ${phone} for immediate dispatch)`,
+        fontSize: 7.5,
+        italics: true,
+        color: COLORS.muted,
+        margin: [0, 2, 0, 0],
+      },
+    )
+  }
+
+  stack.push({
+    text: 'This document is not a tax invoice.',
+    bold: true,
+    fontSize: 9,
+    color: COLORS.disclaimer,
+    margin: [0, 8, 0, 0],
+  })
+
+  return {
+    table: {
+      widths: ['*'],
+      body: [[{ stack, fillColor: COLORS.panelBg }]],
+    },
+    layout: panelLayout(),
+    margin: [0, 0, 0, 14],
+  }
+}
+
 export function buildOrderPdfDefinition(
   order: Order,
   kind: OrderDocumentKind,
+  logoDataUrl?: string,
 ): TDocumentDefinitions {
   const content: Content[] = [
-    buildHeader(order, kind),
-    buildClientDeliveryPanel(order),
+    buildHeader(order, kind, logoDataUrl),
+    buildAddressColumns(order),
     buildLineTable(order),
-    buildFooterNotesAndTotals(order, kind),
   ]
+
+  if (kind === 'proforma') {
+    content.push(buildPaymentBankBlock(order))
+  }
+
+  content.push(buildFooterNotesAndTotals(order))
 
   return {
     pageSize: 'A4',
     pageMargins: [36, 36, 36, 36],
     content,
+    ...(logoDataUrl ? { images: { logo: logoDataUrl } } : {}),
     styles: {
       sectionTitle: {
         fontSize: 10,
         bold: true,
-        color: COLORS.teal,
+        color: COLORS.navy,
       },
     },
     defaultStyle: {
@@ -575,8 +837,15 @@ export async function downloadOrderPdf(
   order: Order,
   kind: OrderDocumentKind,
 ): Promise<void> {
-  const pdfMake = await loadPdfMake()
-  const definition = buildOrderPdfDefinition(order, kind)
+  const [pdfMake, logoDataUrl] = await Promise.all([
+    loadPdfMake(),
+    loadLogoDataUrl(),
+  ])
+  const definition = buildOrderPdfDefinition(
+    order,
+    kind,
+    logoDataUrl ?? undefined,
+  )
   const docNumber =
     kind === 'proforma'
       ? (order.pfNumber ?? 'proforma')

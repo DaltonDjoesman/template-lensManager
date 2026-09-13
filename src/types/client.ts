@@ -1,6 +1,24 @@
 /** Storage collection key: clients/{clientId} */
 export const CLIENTS_COLLECTION = 'clients' as const
 
+export const PAYMENT_TERMS = ['a_pronto', 'net_30'] as const
+
+export type PaymentTerms = (typeof PAYMENT_TERMS)[number]
+
+export const DEFAULT_PAYMENT_TERMS: PaymentTerms = 'net_30'
+
+export function isPaymentTerms(value: unknown): value is PaymentTerms {
+  return value === 'a_pronto' || value === 'net_30'
+}
+
+export function normalizePaymentTerms(value: unknown): PaymentTerms {
+  return isPaymentTerms(value) ? value : DEFAULT_PAYMENT_TERMS
+}
+
+export function paymentTermsLabel(terms: PaymentTerms): string {
+  return terms === 'a_pronto' ? 'Due on receipt' : 'Net 30'
+}
+
 export const DEFAULT_DELIVERY_LOCATION_LABEL = 'Primary delivery' as const
 
 export interface ClientBilling {
@@ -35,6 +53,7 @@ export interface Client {
   billing: ClientBilling
   deliveryLocations: ClientDeliveryLocation[]
   defaultDiscount: DefaultDiscount
+  paymentTerms: PaymentTerms
 }
 
 export type ClientInput = Omit<Client, 'id'>
@@ -71,5 +90,6 @@ export function emptyClientInput(): ClientInput {
     billing: { ...EMPTY_CLIENT_BILLING },
     deliveryLocations: [],
     defaultDiscount: { ...EMPTY_DEFAULT_DISCOUNT },
+    paymentTerms: DEFAULT_PAYMENT_TERMS,
   }
 }

@@ -12,6 +12,9 @@ export interface CompanySettings {
   email: string
   mdrNote: string
   ivaNote: string
+  iban: string
+  bankName: string
+  accountHolder: string
 }
 
 /** Neutral placeholders for the portfolio demo (no real company identity). */
@@ -25,4 +28,7 @@ export const DEFAULT_COMPANY_SETTINGS: CompanySettings = {
     'Dispositivos Médicos de Classe I sob o Regulamento (UE) 2017/745 (MDR).',
   ivaNote:
     'Isenção/Redução de IVA aplicada: Taxa Reduzida de 6% (Verba 2.1 Lista I anexa ao CIVA).',
+  iban: 'PT50 0000 0000 0000 0000 0000 0',
+  bankName: 'Demo Bank',
+  accountHolder: 'Lens Manager Demo',
 }

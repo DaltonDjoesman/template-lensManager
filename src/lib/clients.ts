@@ -5,12 +5,22 @@ import {
   DEFAULT_DELIVERY_LOCATION_LABEL,
   EMPTY_CLIENT_BILLING,
   createDeliveryLocation,
+  normalizePaymentTerms,
+  paymentTermsLabel,
   type Client,
   type ClientBilling,
   type ClientDeliveryLocation,
   type ClientInput,
   type DefaultDiscount,
+  type PaymentTerms,
 } from '../types/client'
+
+export class DuplicateNifError extends Error {
+  constructor(nif: string) {
+    super(`A client with this NIF already exists: ${nif}`)
+    this.name = 'DuplicateNifError'
+  }
+}
 
 // Keep collection name constant for documentation / future Firebase mapping.
 void CLIENTS_COLLECTION
@@ -119,6 +129,7 @@ function mapClientDoc(id: string, data: JsonRecord): Client {
     billing: normalizeBilling(data.billing),
     deliveryLocations: normalizeDeliveryLocations(data),
     defaultDiscount: normalizeDiscount(data.defaultDiscount),
+    paymentTerms: normalizePaymentTerms(data.paymentTerms),
   }
 }
 
@@ -165,6 +176,7 @@ function toStoredPayload(input: ClientInput): JsonRecord {
     },
     deliveryLocations,
     defaultDiscount: discount,
+    paymentTerms: normalizePaymentTerms(input.paymentTerms),
   }
 }
 
@@ -181,7 +193,29 @@ export async function getClient(id: string): Promise<Client | null> {
   return mapClientDoc(id, data)
 }
 
+/** Returns true if another client already uses this billing NIF. */
+export async function isNifTaken(
+  nif: string,
+  excludeId?: string,
+): Promise<boolean> {
+  const normalized = nif.trim()
+  if (!normalized) return false
+
+  const clients = await listClients()
+  return clients.some(
+    (client) =>
+      client.id !== excludeId && client.billing.nif.trim() === normalized,
+  )
+}
+
+async function assertNifUnique(nif: string, excludeId?: string): Promise<void> {
+  if (await isNifTaken(nif, excludeId)) {
+    throw new DuplicateNifError(nif.trim())
+  }
+}
+
 export async function createClient(input: ClientInput): Promise<string> {
+  await assertNifUnique(input.billing.nif)
   return storage.createDoc(
     STORAGE_COLLECTIONS.clients,
     toStoredPayload(input),
@@ -192,11 +226,20 @@ export async function updateClient(
   id: string,
   input: ClientInput,
 ): Promise<void> {
+  const current = await getClient(id)
+  const nextNif = input.billing.nif.trim()
+  if (!current || current.billing.nif.trim() !== nextNif) {
+    await assertNifUnique(nextNif, id)
+  }
   await storage.setDoc(
     STORAGE_COLLECTIONS.clients,
     id,
     toStoredPayload(input),
   )
+}
+
+export function formatPaymentTerms(terms: PaymentTerms): string {
+  return paymentTermsLabel(terms)
 }
 
 export async function deleteClient(id: string): Promise<void> {

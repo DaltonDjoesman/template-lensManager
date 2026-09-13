@@ -13,16 +13,21 @@
   padding: 0 12px;
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
-  background-color: var(--bg);
+  background-color: transparent;
   color: var(--fg);
   font: inherit;
   cursor: pointer;
   text-align: left;
+  transition: var(--transition-colors);
 }
 
-.filter-multi-trigger:hover,
-.filter-multi-trigger[aria-expanded='true'] {
+.filter-multi-trigger:hover {
   border-color: var(--border-hover);
+}
+
+.filter-multi-trigger[aria-expanded='true'] {
+  border-color: var(--accent);
+  box-shadow: var(--focus-ring);
 }
 
 .filter-multi-trigger-label {
@@ -49,7 +54,7 @@
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--shadow-md);
   display: flex;
   flex-direction: column;
   gap: 2px;
@@ -67,9 +72,15 @@
 }
 
 .filter-multi-option:hover {
-  background-color: var(--silver-light);
+  background-color: var(--accent-muted);
 }
 
 .filter-multi-option input {
   accent-color: var(--accent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .filter-multi-trigger {
+    transition: none;
+  }
 }

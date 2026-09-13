@@ -1,11 +1,13 @@
 .view-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-end;
   flex-wrap: wrap;
   gap: 16px;
   min-width: 0;
   max-width: 100%;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--border);
 }
 
 .view-header-title {
@@ -16,11 +18,13 @@
 .view-header-title h2 {
   font-size: clamp(22px, 2.5vw, 28px);
   color: var(--fg);
+  letter-spacing: -0.03em;
 }
 
 .view-header-title p {
   font-size: 14px;
   color: var(--muted);
+  margin-top: 4px;
 }
 
 .view-header-actions {
@@ -28,4 +32,5 @@
   gap: 12px;
   flex-wrap: wrap;
   flex-shrink: 0;
+  padding-bottom: 2px;
 }

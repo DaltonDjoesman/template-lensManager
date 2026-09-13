@@ -1,20 +1,21 @@
-/* Lens Manager design tokens — light + prefers-color-scheme dark */
+/* Lens Manager — ink + brass (hue ~70–85). Dark is the designed look. */
 
 :root {
-  /* Light (hue ~240–245, navy / cold silver) */
-  --bg: oklch(98.5% 0.003 245);
-  --surface: oklch(100% 0 0);
-  --fg: oklch(15% 0.03 245);
-  --muted: oklch(45% 0.015 240);
-  --border: oklch(90% 0.008 240);
-  --border-hover: oklch(82% 0.01 240);
-  --accent: oklch(24% 0.045 245);
-  --accent-hover: oklch(14% 0.035 245);
-  --accent-muted: oklch(94% 0.008 245);
+  /* Light: warm paper. --bg #F7F2EA / --surface #FDFAF6 / brass #CA9D42 */
+  --bg: oklch(96.2% 0.012 78);
+  --surface: oklch(98.6% 0.006 78);
+  --fg: oklch(22% 0.022 70);
+  --muted: oklch(46% 0.02 70);
+  --border: oklch(87% 0.014 75);
+  --border-hover: oklch(78% 0.018 75);
+  --accent: oklch(72% 0.12 82);
+  --accent-hover: oklch(66% 0.13 82);
+  --on-accent: oklch(20% 0.025 70);
+  --accent-muted: oklch(93% 0.03 82);
 
-  --silver-light: oklch(94% 0.005 240);
-  --silver-base: oklch(86% 0.01 240);
-  --silver-dark: oklch(70% 0.015 240);
+  --silver-light: oklch(94% 0.01 78);
+  --silver-base: oklch(88% 0.014 75);
+  --silver-dark: oklch(68% 0.02 72);
 
   --info: oklch(55% 0.14 250);
   --info-muted: oklch(94% 0.03 250);
@@ -33,16 +34,29 @@
   --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, Menlo, monospace;
 
-  --radius-sm: 8px;
+  --radius-sm: 6px;
   --radius-md: 12px;
   --radius-lg: 16px;
-  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.03);
-  --shadow-md: 0 4px 12px -2px rgba(0, 0, 0, 0.05), 0 2px 6px -1px rgba(0, 0, 0, 0.03);
-  --shadow-lg: 0 12px 24px -4px rgba(0, 0, 0, 0.08), 0 4px 12px -2px rgba(0, 0, 0, 0.03);
-  --transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  --shadow-sm: 0 1px 2px 0 rgba(33, 25, 15, 0.05);
+  --shadow-md: 0 4px 16px -4px rgba(33, 25, 15, 0.08), 0 2px 6px -1px rgba(33, 25, 15, 0.04);
+  --shadow-lg: 0 16px 32px -8px rgba(33, 25, 15, 0.12), 0 4px 12px -2px rgba(33, 25, 15, 0.05);
 
-  --navy-gradient-from: oklch(22% 0.04 245);
-  --navy-gradient-to: oklch(12% 0.03 245);
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --duration-fast: 180ms;
+  --transition-colors: background-color var(--duration-fast) var(--ease-out),
+    color var(--duration-fast) var(--ease-out),
+    border-color var(--duration-fast) var(--ease-out),
+    box-shadow var(--duration-fast) var(--ease-out);
+  --transition-chrome: background-color var(--duration-fast) var(--ease-out),
+    color var(--duration-fast) var(--ease-out),
+    border-color var(--duration-fast) var(--ease-out),
+    box-shadow var(--duration-fast) var(--ease-out),
+    transform var(--duration-fast) var(--ease-out),
+    opacity var(--duration-fast) var(--ease-out);
+  --focus-ring: 0 0 0 3px color-mix(in oklch, var(--accent) 22%, transparent);
+
+  --navy-gradient-from: oklch(28% 0.02 70);
+  --navy-gradient-to: oklch(21% 0.016 70);
 
   --space-1: 4px;
   --space-2: 8px;
@@ -53,83 +67,84 @@
   --space-8: 32px;
   --space-10: 40px;
 
-  --sidebar-width: 260px;
-  --mobile-nav-height: 60px;
+  --sidebar-width: 248px;
+  --mobile-nav-height: 64px;
   --breakpoint-nav: 900px;
 }
 
 /* Dark tokens: forced via data-theme, or OS preference when theme = system.
-   Keep both blocks in sync. High contrast for panels/tables/CTAs. */
+   Keep both blocks in sync. --bg #1D1710 / --surface #2C251D / brass #DEAF56 */
 html[data-theme='dark'] {
   color-scheme: dark;
 
-  --bg: oklch(11% 0.024 245);
-  --surface: oklch(22% 0.03 245);
-  --fg: oklch(98.5% 0.003 240);
-  --muted: oklch(78% 0.015 240);
-  --border: oklch(42% 0.026 245);
-  --border-hover: oklch(55% 0.022 245);
-  /* Crisp off-white primary (dark navy text via --bg on buttons) */
-  --accent: oklch(96% 0.006 240);
-  --accent-hover: oklch(100% 0 0);
-  --accent-muted: oklch(30% 0.032 245);
+  --bg: oklch(21% 0.016 70);
+  --surface: oklch(27% 0.018 70);
+  --fg: oklch(94% 0.012 80);
+  --muted: oklch(72% 0.018 75);
+  --border: oklch(36% 0.016 70);
+  --border-hover: oklch(46% 0.018 70);
+  --accent: oklch(78% 0.12 82);
+  --accent-hover: oklch(84% 0.11 82);
+  --on-accent: oklch(20% 0.025 70);
+  --accent-muted: oklch(32% 0.03 75);
 
-  --silver-light: oklch(16% 0.026 245);
-  --silver-base: oklch(28% 0.028 245);
-  --silver-dark: oklch(44% 0.022 240);
+  --silver-light: oklch(24% 0.016 70);
+  --silver-base: oklch(32% 0.018 70);
+  --silver-dark: oklch(42% 0.016 70);
 
   --info: oklch(78% 0.12 250);
-  --info-muted: oklch(30% 0.06 250);
+  --info-muted: oklch(24% 0.05 250);
   --success: oklch(76% 0.15 145);
-  --success-muted: oklch(28% 0.05 145);
+  --success-muted: oklch(24% 0.045 145);
   --warn: oklch(86% 0.12 80);
-  --warn-muted: oklch(30% 0.05 80);
+  --warn-muted: oklch(26% 0.045 80);
   --warn-text: oklch(92% 0.06 80);
   --danger: oklch(74% 0.17 25);
-  --danger-muted: oklch(30% 0.06 25);
+  --danger-muted: oklch(24% 0.05 25);
 
-  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.45);
-  --shadow-md: 0 4px 14px -2px rgba(0, 0, 0, 0.55), 0 2px 6px -1px rgba(0, 0, 0, 0.4);
-  --shadow-lg: 0 14px 28px -4px rgba(0, 0, 0, 0.65), 0 4px 12px -2px rgba(0, 0, 0, 0.45);
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 8px 20px -6px rgba(0, 0, 0, 0.5), 0 2px 6px -1px rgba(0, 0, 0, 0.35);
+  --shadow-lg: 0 18px 36px -8px rgba(0, 0, 0, 0.6), 0 4px 12px -2px rgba(0, 0, 0, 0.4);
 
-  --navy-gradient-from: oklch(22% 0.04 245);
-  --navy-gradient-to: oklch(11% 0.028 245);
+  --navy-gradient-from: oklch(28% 0.02 70);
+  --navy-gradient-to: oklch(21% 0.016 70);
 }
 
 @media (prefers-color-scheme: dark) {
   html:not([data-theme='light']):not([data-theme='dark']) {
     color-scheme: dark;
 
-    --bg: oklch(11% 0.024 245);
-    --surface: oklch(22% 0.03 245);
-    --fg: oklch(98.5% 0.003 240);
-    --muted: oklch(78% 0.015 240);
-    --border: oklch(42% 0.026 245);
-    --border-hover: oklch(55% 0.022 245);
-    --accent: oklch(96% 0.006 240);
-    --accent-hover: oklch(100% 0 0);
-    --accent-muted: oklch(30% 0.032 245);
+    --bg: oklch(21% 0.016 70);
+    --surface: oklch(27% 0.018 70);
+    --fg: oklch(94% 0.012 80);
+    --muted: oklch(72% 0.018 75);
+    --border: oklch(36% 0.016 70);
+    --border-hover: oklch(46% 0.018 70);
+    --accent: oklch(78% 0.12 82);
+    --accent-hover: oklch(84% 0.11 82);
+    --on-accent: oklch(20% 0.025 70);
+    --accent-muted: oklch(32% 0.03 75);
 
-    --silver-light: oklch(16% 0.026 245);
-    --silver-base: oklch(28% 0.028 245);
-    --silver-dark: oklch(44% 0.022 240);
+    --silver-light: oklch(24% 0.016 70);
+    --silver-base: oklch(32% 0.018 70);
+    --silver-dark: oklch(42% 0.016 70);
 
     --info: oklch(78% 0.12 250);
-    --info-muted: oklch(30% 0.06 250);
+    --info-muted: oklch(24% 0.05 250);
     --success: oklch(76% 0.15 145);
-    --success-muted: oklch(28% 0.05 145);
+    --success-muted: oklch(24% 0.045 145);
     --warn: oklch(86% 0.12 80);
-    --warn-muted: oklch(30% 0.05 80);
+    --warn-muted: oklch(26% 0.045 80);
     --warn-text: oklch(92% 0.06 80);
     --danger: oklch(74% 0.17 25);
-    --danger-muted: oklch(30% 0.06 25);
+    --danger-muted: oklch(24% 0.05 25);
 
-    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.45);
-    --shadow-md: 0 4px 14px -2px rgba(0, 0, 0, 0.55), 0 2px 6px -1px rgba(0, 0, 0, 0.4);
-    --shadow-lg: 0 14px 28px -4px rgba(0, 0, 0, 0.65), 0 4px 12px -2px rgba(0, 0, 0, 0.45);
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.4);
+    --shadow-md: 0 8px 20px -6px rgba(0, 0, 0, 0.5), 0 2px 6px -1px rgba(0, 0, 0, 0.35);
+    --shadow-lg: 0 18px 36px -8px rgba(0, 0, 0, 0.6), 0 4px 12px -2px rgba(0, 0, 0, 0.4);
 
-    --navy-gradient-from: oklch(22% 0.04 245);
-    --navy-gradient-to: oklch(11% 0.028 245);
+    --navy-gradient-from: oklch(28% 0.02 70);
+    --navy-gradient-to: oklch(21% 0.016 70);
   }
 }
 
@@ -182,7 +197,7 @@ textarea:focus-visible,
 button:focus-visible,
 a:focus-visible {
   outline: 2px solid var(--accent);
-  outline-offset: 1px;
+  outline-offset: 2px;
 }
 
 h1,
@@ -191,7 +206,7 @@ h3,
 h4 {
   font-family: var(--font-display);
   font-weight: 600;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.03em;
 }
 
 a {
@@ -244,11 +259,17 @@ a {
 
 @keyframes toastIn {
   from {
-    transform: translateY(10px);
+    transform: translateY(8px);
     opacity: 0;
   }
   to {
     transform: translateY(0);
     opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
   }
 }

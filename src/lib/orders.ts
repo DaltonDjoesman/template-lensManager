@@ -2,6 +2,7 @@ import { storage, STORAGE_COLLECTIONS } from './storage'
 import type { JsonRecord } from './storage'
 import {
   EMPTY_CLIENT_BILLING,
+  normalizePaymentTerms,
   type ClientBilling,
   type DefaultDiscount,
 } from '../types/client'
@@ -85,6 +86,10 @@ function normalizeCompany(raw: unknown): CompanySettings {
     email: asString(data.email) || DEFAULT_COMPANY_SETTINGS.email,
     mdrNote: asString(data.mdrNote) || DEFAULT_COMPANY_SETTINGS.mdrNote,
     ivaNote: asString(data.ivaNote) || DEFAULT_COMPANY_SETTINGS.ivaNote,
+    iban: asString(data.iban) || DEFAULT_COMPANY_SETTINGS.iban,
+    bankName: asString(data.bankName) || DEFAULT_COMPANY_SETTINGS.bankName,
+    accountHolder:
+      asString(data.accountHolder) || DEFAULT_COMPANY_SETTINGS.accountHolder,
   }
 }
 
@@ -172,9 +177,11 @@ function mapOrderDoc(id: string, data: JsonRecord): Order {
     deliveryLocationId: asOptionalString(data.deliveryLocationId),
     orderDiscount,
     clientDefaultDiscount,
+    paymentTerms: normalizePaymentTerms(data.paymentTerms),
     lines,
     pedNumber: asOptionalString(data.pedNumber),
     pfNumber: asOptionalString(data.pfNumber),
+    pfIssuedAt: asOptionalString(data.pfIssuedAt),
     createdAt: asString(data.createdAt),
     updatedAt: asString(data.updatedAt),
     confirmedAt: asOptionalString(data.confirmedAt),
@@ -248,9 +255,13 @@ function toStoredPayload(input: OrderInput): JsonRecord {
       email: input.company.email.trim(),
       mdrNote: input.company.mdrNote.trim(),
       ivaNote: input.company.ivaNote.trim(),
+      iban: input.company.iban.trim(),
+      bankName: input.company.bankName.trim(),
+      accountHolder: input.company.accountHolder.trim(),
     },
     orderDiscount: trimDiscount(input.orderDiscount),
     clientDefaultDiscount: trimDiscount(input.clientDefaultDiscount),
+    paymentTerms: normalizePaymentTerms(input.paymentTerms),
     lines,
   }
 
@@ -260,6 +271,7 @@ function toStoredPayload(input: OrderInput): JsonRecord {
 
   if (input.pedNumber) payload.pedNumber = input.pedNumber
   if (input.pfNumber) payload.pfNumber = input.pfNumber
+  if (input.pfIssuedAt) payload.pfIssuedAt = input.pfIssuedAt
   if (input.confirmedAt) payload.confirmedAt = input.confirmedAt
 
   return payload
@@ -319,6 +331,7 @@ export async function createOrder(input: OrderInput): Promise<string> {
   // Drafts must not carry PED/PF
   delete payload.pedNumber
   delete payload.pfNumber
+  delete payload.pfIssuedAt
   delete payload.confirmedAt
 
   return storage.createDoc(STORAGE_COLLECTIONS.orders, {
@@ -354,6 +367,7 @@ export async function updateOrder(
 
   if (existing.pedNumber) payload.pedNumber = existing.pedNumber
   if (existing.pfNumber) payload.pfNumber = existing.pfNumber
+  if (existing.pfIssuedAt) payload.pfIssuedAt = existing.pfIssuedAt
   if (existing.confirmedAt) payload.confirmedAt = existing.confirmedAt
 
   // Never write PED on draft saves
@@ -443,14 +457,18 @@ export async function ensurePfNumber(id: string): Promise<string> {
   const now = new Date().toISOString()
   const pfNumber = await allocatePfNumber(aamm)
 
+  const pfIssuedAt = existing.pfIssuedAt ?? now
+
   await storage.setDoc(STORAGE_COLLECTIONS.orders, id, {
     ...toStoredPayload({
       ...existing,
       pfNumber,
+      pfIssuedAt,
     }),
     createdAt: existing.createdAt,
     updatedAt: now,
     pfNumber,
+    pfIssuedAt,
     ...(existing.pedNumber ? { pedNumber: existing.pedNumber } : {}),
     ...(existing.confirmedAt ? { confirmedAt: existing.confirmedAt } : {}),
   })
@@ -477,6 +495,7 @@ export async function duplicateOrder(id: string): Promise<string> {
     deliveryLocationId: source.deliveryLocationId,
     orderDiscount: { ...source.orderDiscount },
     clientDefaultDiscount: { ...source.clientDefaultDiscount },
+    paymentTerms: source.paymentTerms,
     lines: source.lines.map((line) =>
       createEmptyOrderLine({
         productId: line.productId,
@@ -532,4 +551,17 @@ export function formatOrderDate(isoDate: string): string {
   const [y, m, d] = day.split('-')
   if (!y || !m || !d || d.length < 2) return isoDate
   return `${d}/${m}/${y}`
+}
+
+export function formatOrderDateTime(iso: string): string {
+  if (!iso) return '—'
+  const parsed = new Date(iso)
+  if (Number.isNaN(parsed.getTime())) return formatOrderDate(iso)
+  return new Intl.DateTimeFormat('pt-PT', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(parsed)
 }

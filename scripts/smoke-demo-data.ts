@@ -76,6 +76,8 @@ assert((await listProducts()).length === 0, 'products empty after wipe')
 assert((await listOrders()).length === 0, 'orders empty after wipe')
 const company = await loadCompanySettings()
 assert(company.name.includes('Demo') || company.name.length > 0, 'company placeholders')
+assert(company.iban.includes('0000'), 'demo IBAN placeholder')
+assert(company.bankName === 'Demo Bank', 'demo bank name')
 const markerAfterWipe = JSON.parse(localStorage.getItem(DEMO_SEED_MARKER_KEY)!)
 assert(markerAfterWipe.state === 'wiped', 'marker wiped')
 
@@ -88,6 +90,11 @@ await restoreSeedDemoData()
 assert((await listClients()).length >= 3, 'clients after restore')
 assert((await listProducts()).length >= 5, 'products after restore')
 assert((await listOrders()).length >= 3, 'orders after restore')
+const restoredClients = await listClients()
+assert(
+  restoredClients.every((c) => c.paymentTerms === 'a_pronto' || c.paymentTerms === 'net_30'),
+  'seeded clients have payment terms',
+)
 const markerAfterRestore = JSON.parse(localStorage.getItem(DEMO_SEED_MARKER_KEY)!)
 assert(markerAfterRestore.state === 'seeded', 'marker seeded')
 

@@ -9,14 +9,14 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
-  transition: var(--transition);
+  transition: var(--transition-chrome);
   text-decoration: none;
   background: transparent;
 }
 
 .btn--primary {
   background-color: var(--accent);
-  color: var(--bg);
+  color: var(--on-accent);
 }
 
 .btn--primary:hover:not(:disabled) {
@@ -26,7 +26,7 @@
 
 .btn--accent {
   background-color: var(--accent);
-  color: var(--bg);
+  color: var(--on-accent);
 }
 
 .btn--accent:hover:not(:disabled) {
@@ -59,43 +59,28 @@
 }
 
 .btn--secondary {
-  background-color: var(--surface);
+  background-color: transparent;
   border: 1px solid var(--border);
   color: var(--fg);
 }
 
 .btn--secondary:hover:not(:disabled) {
-  background-color: var(--silver-light);
+  background-color: var(--accent-muted);
   border-color: var(--border-hover);
 }
 
-@media (prefers-color-scheme: dark) {
-  html:not([data-theme='light']) .btn--secondary {
-    background-color: var(--silver-base);
-  }
-
-  html:not([data-theme='light']) .btn--secondary:hover:not(:disabled) {
-    background-color: var(--silver-dark);
-  }
+.btn--danger,
+.btn--ghost-danger {
+  background-color: transparent;
+  border: 1px solid transparent;
+  color: var(--muted);
+  font-weight: 500;
 }
 
-html[data-theme='dark'] .btn--secondary {
-  background-color: var(--silver-base);
-}
-
-html[data-theme='dark'] .btn--secondary:hover:not(:disabled) {
-  background-color: var(--silver-dark);
-}
-
-.btn--danger {
+.btn--danger:hover:not(:disabled),
+.btn--ghost-danger:hover:not(:disabled) {
   background-color: var(--danger-muted);
-  border: 1px solid var(--danger);
   color: var(--danger);
-}
-
-.btn--danger:hover:not(:disabled) {
-  background-color: var(--danger);
-  color: oklch(99% 0 0);
 }
 
 .btn--disabled,
@@ -112,4 +97,17 @@ html[data-theme='dark'] .btn--secondary:hover:not(:disabled) {
   height: 36px;
   padding: 0 10px;
   font-size: 13px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn {
+    transition: none;
+  }
+
+  .btn--primary:hover:not(:disabled),
+  .btn--accent:hover:not(:disabled),
+  .btn--success:hover:not(:disabled),
+  .btn--info:hover:not(:disabled) {
+    transform: none;
+  }
 }

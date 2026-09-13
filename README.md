@@ -10,10 +10,10 @@ Optical wholesale and lab workflows need a clear path from client → catalog SK
 
 ## Features
 
-- **Clients** with billing details, named delivery locations, and optional default discounts
+- **Clients** with billing details, unique tax ID, named delivery locations, default payment terms (due on receipt / net 30), and optional default discounts
 - **Catalog** of lens families (SKU, price, SPH/CYL amplitude ranges); order lines compose `{sku}_{sph}_{cyl}`
-- **Orders** across Draft / Confirmed / Completed / Cancelled, with PED/PF numbering, line and order discounts, IVA, multi-select status/client filters, and sortable columns
-- **Proforma PDF** generation (pdfmake) using company MDR/IVA notes
+- **Orders** across Draft / Confirmed / Completed / Cancelled, with PED/PF numbering, sticky proforma issue time, line and order discounts, IVA, multi-select status/client filters, and sortable columns
+- **Proforma PDF** generation (pdfmake) with payment terms, demo bank details, and company MDR/IVA notes (order PDF has a payment badge only)
 - **Sales by SKU** report over confirmed/completed orders
 - **System / Light / Dark** theme preference
 - **PWA** installability via `vite-plugin-pwa`

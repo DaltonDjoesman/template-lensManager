@@ -232,6 +232,32 @@ export function DefinicoesPage() {
               onChange={(e) => updateField('address', e.target.value)}
             />
 
+            <div className="form-section-label all-caps">Bank details</div>
+            <p className="form-section-hint">
+              Account holder can differ from the trading name on document
+              headers. Shown on the proforma PDF.
+            </p>
+            <div className="grid-2col">
+              <Input
+                id="settings-company-iban"
+                label="IBAN"
+                value={form.iban}
+                onChange={(e) => updateField('iban', e.target.value)}
+              />
+              <Input
+                id="settings-company-bank"
+                label="Bank"
+                value={form.bankName}
+                onChange={(e) => updateField('bankName', e.target.value)}
+              />
+            </div>
+            <Input
+              id="settings-company-holder"
+              label="Account holder"
+              value={form.accountHolder}
+              onChange={(e) => updateField('accountHolder', e.target.value)}
+            />
+
             <div className="legal-block">
               <span className="all-caps">Legal Text and Exemptions (PDF)</span>
               <Input

@@ -1,9 +1,13 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react'
+import { AnimatePresence, motion } from 'motion/react'
 import { useNavigate, useParams } from 'react-router-dom'
+import { useFadeMotion } from '../lib/motionPresets'
 import { ViewHeader } from '../components/ui/ViewHeader'
 import { Button } from '../components/ui/Button'
 import { Card } from '../components/ui/Card'
 import { Input, TextArea } from '../components/ui/Input'
+import { DateInput } from '../components/ui/DateInput'
+import { PostalCodeInput } from '../components/ui/PostalCodeInput'
 import { listClients } from '../lib/clients'
 import { loadCompanySettings } from '../lib/companySettings'
 import { listProducts, formatEur as formatProductEur } from '../lib/products'
@@ -16,7 +20,12 @@ import {
   updateOrder,
 } from '../lib/orders'
 import { downloadOrderPdf } from '../lib/orderPdf'
-import type { Client, ClientDeliveryLocation } from '../types/client'
+import {
+  DEFAULT_PAYMENT_TERMS,
+  type Client,
+  type ClientDeliveryLocation,
+  type PaymentTerms,
+} from '../types/client'
 import type { Product } from '../types/product'
 import type { CompanySettings } from '../types/companySettings'
 import {
@@ -117,6 +126,7 @@ function emptyFormState(company: CompanySettings): OrderInput {
     company: { ...company },
     orderDiscount: {},
     clientDefaultDiscount: {},
+    paymentTerms: DEFAULT_PAYMENT_TERMS,
     lines: [createEmptyOrderLine()],
   }
 }
@@ -136,9 +146,11 @@ function orderToInput(order: Order): OrderInput {
     deliveryLocationId: order.deliveryLocationId,
     orderDiscount: { ...order.orderDiscount },
     clientDefaultDiscount: { ...order.clientDefaultDiscount },
+    paymentTerms: order.paymentTerms,
     lines: order.lines.map((l) => ({ ...l })),
     pedNumber: order.pedNumber,
     pfNumber: order.pfNumber,
+    pfIssuedAt: order.pfIssuedAt,
     confirmedAt: order.confirmedAt,
   }
 }
@@ -166,6 +178,7 @@ export function PedidoFormPage() {
   const [activeTab, setActiveTab] = useState<'info' | 'lenses' | 'company'>(
     'info',
   )
+  const fade = useFadeMotion()
 
   useEffect(() => {
     let cancelled = false
@@ -263,6 +276,7 @@ export function PedidoFormPage() {
       billing: { ...client.billing },
       orderDiscount: { ...client.defaultDiscount },
       clientDefaultDiscount: { ...client.defaultDiscount },
+      paymentTerms: client.paymentTerms,
       deliveryLocationId: primary?.id,
       shipping: primary
         ? shippingFromLocation(primary)
@@ -659,231 +673,315 @@ export function PedidoFormPage() {
             </button>
           </div>
 
+          <AnimatePresence mode="wait">
           {activeTab === 'info' ? (
-            <div
+            <motion.div
+              key="info"
               role="tabpanel"
               id="order-panel-info"
               aria-labelledby="order-tab-info"
               className="order-tab-panel"
+              initial={fade.initial}
+              animate={fade.animate}
+              exit={fade.exit}
+              transition={fade.transition}
             >
-              <div className="grid-2col">
-                <div className="form-group">
-                  <label htmlFor="order-client">Client Optician *</label>
-                  <select
-                    id="order-client"
-                    className="input-field"
-                    value={form.clientId}
-                    disabled={readOnly || form.status !== 'Draft'}
-                    onChange={(e) => applyClient(e.target.value)}
-                    required
-                  >
-                    <option value="">Select client…</option>
-                    {clients.map((c) => (
-                      <option key={c.id} value={c.id}>
-                        {c.billing.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <Input
-                  id="order-po"
-                  label="Client PO Reference"
-                  value={form.clientPo}
-                  disabled={readOnly}
-                  onChange={(e) => patchForm({ clientPo: e.target.value })}
-                />
-              </div>
-
-              <div className="grid-2col">
-                <Input
-                  id="order-date"
-                  label="Order Date"
-                  type="date"
-                  value={form.orderDate}
-                  disabled={readOnly}
-                  onChange={(e) => patchForm({ orderDate: e.target.value })}
-                />
-                <Input
-                  id="order-notes"
-                  label="Internal Notes"
-                  value={form.notes}
-                  disabled={readOnly}
-                  onChange={(e) => patchForm({ notes: e.target.value })}
-                />
-              </div>
-
-              <p className="form-section-label all-caps">Billing (snapshot)</p>
-              <div className="grid-2col">
-                <Input
-                  id="bill-name"
-                  label="Name"
-                  value={form.billing.name}
-                  disabled={readOnly}
-                  onChange={(e) =>
-                    patchForm({
-                      billing: { ...form.billing, name: e.target.value },
-                    })
-                  }
-                />
-                <Input
-                  id="bill-nif"
-                  label="Tax ID"
-                  value={form.billing.nif}
-                  disabled={readOnly}
-                  onChange={(e) =>
-                    patchForm({
-                      billing: { ...form.billing, nif: e.target.value },
-                    })
-                  }
-                />
-                <Input
-                  id="bill-contact"
-                  label="Contact"
-                  value={form.billing.contactName}
-                  disabled={readOnly}
-                  onChange={(e) =>
-                    patchForm({
-                      billing: { ...form.billing, contactName: e.target.value },
-                    })
-                  }
-                />
-                <Input
-                  id="bill-phone"
-                  label="Phone"
-                  value={form.billing.phone}
-                  disabled={readOnly}
-                  onChange={(e) =>
-                    patchForm({
-                      billing: { ...form.billing, phone: e.target.value },
-                    })
-                  }
-                />
-                <Input
-                  id="bill-email"
-                  label="Email"
-                  value={form.billing.email}
-                  disabled={readOnly}
-                  onChange={(e) =>
-                    patchForm({
-                      billing: { ...form.billing, email: e.target.value },
-                    })
-                  }
-                />
-                <TextArea
-                  id="bill-address"
-                  label="Address"
-                  rows={2}
-                  value={form.billing.address}
-                  disabled={readOnly}
-                  onChange={(e) =>
-                    patchForm({
-                      billing: { ...form.billing, address: e.target.value },
-                    })
-                  }
-                />
-              </div>
-
-              <p className="form-section-label all-caps">Delivery (snapshot)</p>
-
-              {!form.clientId ? (
-                <p className="form-section-hint">
-                  Select the client optician to choose a delivery location.
-                </p>
-              ) : selectedClient && selectedClient.deliveryLocations.length > 0 ? (
-                <div className="form-group">
-                  <label htmlFor="order-delivery-loc">Client delivery location</label>
-                  <select
-                    id="order-delivery-loc"
-                    className="input-field"
-                    value={form.deliveryLocationId ?? ''}
-                    disabled={readOnly}
-                    onChange={(e) => applyDeliveryLocation(e.target.value)}
-                  >
-                    {selectedClient.deliveryLocations.map((loc) => (
-                      <option key={loc.id} value={loc.id}>
-                        {loc.label}
-                        {loc.isPrimary ? ' (primary)' : ''}
-                      </option>
-                    ))}
-                  </select>
+              <section className="order-info-section">
+                <header className="order-info-section-header">
+                  <p className="form-section-label all-caps">Order</p>
                   <p className="form-section-hint">
-                    Choosing a location fills the fields below. You can still
-                    edit the snapshot for this order only.
+                    Client, reference, and payment terms for this order.
                   </p>
+                </header>
+
+                <div className="grid-2col">
+                  <div className="form-group">
+                    <label htmlFor="order-client">Client Optician *</label>
+                    <select
+                      id="order-client"
+                      className="input-field"
+                      value={form.clientId}
+                      disabled={readOnly || form.status !== 'Draft'}
+                      onChange={(e) => applyClient(e.target.value)}
+                      required
+                    >
+                      <option value="">Select client…</option>
+                      {clients.map((c) => (
+                        <option key={c.id} value={c.id}>
+                          {c.billing.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <Input
+                    id="order-po"
+                    label="Client PO Reference"
+                    value={form.clientPo}
+                    disabled={readOnly}
+                    onChange={(e) => patchForm({ clientPo: e.target.value })}
+                  />
                 </div>
-              ) : (
-                <p className="form-section-hint">
-                  This client has no delivery locations on file — fill in
-                  manually or add locations under Clients.
-                </p>
-              )}
 
-              <div className="grid-2col">
-                <Input
-                  id="ship-recipient"
-                  label="Recipient"
-                  value={form.shipping.recipient}
-                  disabled={readOnly}
-                  onChange={(e) =>
-                    patchForm({
-                      shipping: { ...form.shipping, recipient: e.target.value },
-                    })
-                  }
-                />
-                <Input
-                  id="ship-careof"
-                  label="C/O"
-                  value={form.shipping.careOf}
-                  disabled={readOnly}
-                  onChange={(e) =>
-                    patchForm({
-                      shipping: { ...form.shipping, careOf: e.target.value },
-                    })
-                  }
-                />
-                <Input
-                  id="ship-phone"
-                  label="Phone"
-                  value={form.shipping.phone}
-                  disabled={readOnly}
-                  onChange={(e) =>
-                    patchForm({
-                      shipping: { ...form.shipping, phone: e.target.value },
-                    })
-                  }
-                />
-                <Input
-                  id="ship-postal"
-                  label="Postal Code"
-                  value={form.shipping.postalCode}
-                  disabled={readOnly}
-                  onChange={(e) =>
-                    patchForm({
-                      shipping: { ...form.shipping, postalCode: e.target.value },
-                    })
-                  }
-                />
-                <TextArea
-                  id="ship-address"
-                  label="Address"
-                  rows={2}
-                  value={form.shipping.address}
-                  disabled={readOnly}
-                  onChange={(e) =>
-                    patchForm({
-                      shipping: { ...form.shipping, address: e.target.value },
-                    })
-                  }
-                />
-              </div>
+                <div className="grid-2col">
+                  <DateInput
+                    id="order-date"
+                    label="Order Date"
+                    value={form.orderDate}
+                    disabled={readOnly}
+                    onValueChange={(iso) => patchForm({ orderDate: iso })}
+                  />
+                  <Input
+                    id="order-notes"
+                    label="Internal Notes"
+                    value={form.notes}
+                    disabled={readOnly}
+                    onChange={(e) => patchForm({ notes: e.target.value })}
+                  />
+                </div>
 
-            </div>
+                <div className="order-info-subsection">
+                  <p className="form-section-label all-caps">Payment terms</p>
+                  <p className="form-section-hint">
+                    Copied from the client record; you can change it on this
+                    order only.
+                  </p>
+                  <div
+                    className="theme-pref-group"
+                    role="radiogroup"
+                    aria-label="Order payment terms"
+                  >
+                    {(
+                      [
+                        { value: 'a_pronto', label: 'Due on receipt' },
+                        { value: 'net_30', label: 'Net 30' },
+                      ] as const
+                    ).map((option) => {
+                      const active = form.paymentTerms === option.value
+                      return (
+                        <button
+                          key={option.value}
+                          type="button"
+                          role="radio"
+                          aria-checked={active}
+                          disabled={readOnly}
+                          className={
+                            active
+                              ? 'theme-pref-option theme-pref-option--active'
+                              : 'theme-pref-option'
+                          }
+                          onClick={() =>
+                            patchForm({
+                              paymentTerms: option.value as PaymentTerms,
+                            })
+                          }
+                        >
+                          {option.label}
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+              </section>
+
+              <section className="order-info-section">
+                <header className="order-info-section-header">
+                  <p className="form-section-label all-caps">
+                    Billing on the document
+                  </p>
+                  {form.billing.name.trim() ? (
+                    <p className="order-info-section-entity mono">
+                      {form.billing.name}
+                    </p>
+                  ) : (
+                    <p className="form-section-hint">
+                      Filled when you pick the optician; editable on this order
+                      only.
+                    </p>
+                  )}
+                </header>
+
+                <div className="grid-2col">
+                  <Input
+                    id="bill-nif"
+                    label="Tax ID"
+                    value={form.billing.nif}
+                    disabled={readOnly}
+                    onChange={(e) =>
+                      patchForm({
+                        billing: { ...form.billing, nif: e.target.value },
+                      })
+                    }
+                  />
+                  <Input
+                    id="bill-contact"
+                    label="Contact"
+                    value={form.billing.contactName}
+                    disabled={readOnly}
+                    onChange={(e) =>
+                      patchForm({
+                        billing: {
+                          ...form.billing,
+                          contactName: e.target.value,
+                        },
+                      })
+                    }
+                  />
+                  <Input
+                    id="bill-phone"
+                    label="Phone"
+                    value={form.billing.phone}
+                    disabled={readOnly}
+                    onChange={(e) =>
+                      patchForm({
+                        billing: { ...form.billing, phone: e.target.value },
+                      })
+                    }
+                  />
+                  <Input
+                    id="bill-email"
+                    label="Email"
+                    value={form.billing.email}
+                    disabled={readOnly}
+                    onChange={(e) =>
+                      patchForm({
+                        billing: { ...form.billing, email: e.target.value },
+                      })
+                    }
+                  />
+                  <TextArea
+                    id="bill-address"
+                    label="Address"
+                    rows={2}
+                    value={form.billing.address}
+                    disabled={readOnly}
+                    onChange={(e) =>
+                      patchForm({
+                        billing: { ...form.billing, address: e.target.value },
+                      })
+                    }
+                  />
+                </div>
+              </section>
+
+              <section className="order-info-section">
+                <header className="order-info-section-header">
+                  <p className="form-section-label all-caps">Delivery</p>
+                  <p className="form-section-hint">
+                    Destination for this order; does not change the client
+                    record.
+                  </p>
+                </header>
+
+                {!form.clientId ? (
+                  <p className="form-section-hint">
+                    Select the client optician to choose a delivery location.
+                  </p>
+                ) : selectedClient &&
+                  selectedClient.deliveryLocations.length > 0 ? (
+                  <div className="form-group">
+                    <label htmlFor="order-delivery-loc">
+                      Client delivery location
+                    </label>
+                    <select
+                      id="order-delivery-loc"
+                      className="input-field"
+                      value={form.deliveryLocationId ?? ''}
+                      disabled={readOnly}
+                      onChange={(e) => applyDeliveryLocation(e.target.value)}
+                    >
+                      {selectedClient.deliveryLocations.map((loc) => (
+                        <option key={loc.id} value={loc.id}>
+                          {loc.label}
+                          {loc.isPrimary ? ' (primary)' : ''}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                ) : (
+                  <p className="form-section-hint">
+                    This client has no delivery locations on file — fill in
+                    manually or add locations under Clients.
+                  </p>
+                )}
+
+                <div className="grid-2col">
+                  <Input
+                    id="ship-recipient"
+                    label="Recipient"
+                    value={form.shipping.recipient}
+                    disabled={readOnly}
+                    onChange={(e) =>
+                      patchForm({
+                        shipping: {
+                          ...form.shipping,
+                          recipient: e.target.value,
+                        },
+                      })
+                    }
+                  />
+                  <Input
+                    id="ship-careof"
+                    label="C/O"
+                    value={form.shipping.careOf}
+                    disabled={readOnly}
+                    onChange={(e) =>
+                      patchForm({
+                        shipping: { ...form.shipping, careOf: e.target.value },
+                      })
+                    }
+                  />
+                  <Input
+                    id="ship-phone"
+                    label="Phone"
+                    value={form.shipping.phone}
+                    disabled={readOnly}
+                    onChange={(e) =>
+                      patchForm({
+                        shipping: { ...form.shipping, phone: e.target.value },
+                      })
+                    }
+                  />
+                  <PostalCodeInput
+                    id="ship-postal"
+                    label="Postal Code"
+                    value={form.shipping.postalCode}
+                    disabled={readOnly}
+                    onValueChange={(postalCode) =>
+                      patchForm({
+                        shipping: {
+                          ...form.shipping,
+                          postalCode,
+                        },
+                      })
+                    }
+                  />
+                  <TextArea
+                    id="ship-address"
+                    label="Address"
+                    rows={2}
+                    value={form.shipping.address}
+                    disabled={readOnly}
+                    onChange={(e) =>
+                      patchForm({
+                        shipping: { ...form.shipping, address: e.target.value },
+                      })
+                    }
+                  />
+                </div>
+              </section>
+
+            </motion.div>
           ) : activeTab === 'lenses' ? (
-            <div
+            <motion.div
+              key="lenses"
               role="tabpanel"
               id="order-panel-lenses"
               aria-labelledby="order-tab-lenses"
               className="order-tab-panel"
+              initial={fade.initial}
+              animate={fade.animate}
+              exit={fade.exit}
+              transition={fade.transition}
             >
               <div className="order-lines-header-bar">
                 <span className="all-caps">Order Lines</span>
@@ -912,7 +1010,18 @@ export function PedidoFormPage() {
 
                   return (
                   <div key={line.id} className="order-line-row">
-                    <div className="form-group">
+                    {!readOnly ? (
+                      <Button
+                        type="button"
+                        variant="ghost-danger"
+                        className="order-line-remove"
+                        onClick={() => removeLine(line.id)}
+                        aria-label="Remove line"
+                      >
+                        ×
+                      </Button>
+                    ) : null}
+                    <div className="form-group order-line-family">
                       <label className="order-line-label">Family</label>
                       <select
                         className="input-field"
@@ -931,50 +1040,69 @@ export function PedidoFormPage() {
                         <span className="line-sku-hint mono">{line.lineSku}</span>
                       ) : null}
                     </div>
-                    <Input
-                      id={`sph-${line.id}`}
-                      label="SPH"
-                      type="number"
-                      step="0.25"
-                      value={Number.isFinite(line.sph) ? line.sph : 0}
-                      disabled={readOnly || !line.productId}
-                      onChange={(e) =>
-                        updateLine(line.id, { sph: Number(e.target.value) })
-                      }
-                    />
-                    <Input
-                      id={`cyl-${line.id}`}
-                      label="CYL"
-                      type="number"
-                      step="0.25"
-                      value={Number.isFinite(line.cyl) ? line.cyl : 0}
-                      disabled={readOnly || !line.productId}
-                      onChange={(e) =>
-                        updateLine(line.id, { cyl: Number(e.target.value) })
-                      }
-                    />
-                    <Input
-                      id={`qty-${line.id}`}
-                      label="Qty"
-                      type="number"
-                      min={1}
-                      step={1}
-                      value={line.qty}
-                      disabled={readOnly}
-                      onChange={(e) =>
-                        updateLine(line.id, {
-                          qty: Math.max(1, Number(e.target.value) || 1),
-                        })
-                      }
-                    />
-                    <div className="form-group">
-                      <label className="order-line-label">Unit Price</label>
+                    <div className="form-group order-line-net">
+                      <label className="order-line-label">Subtotal</label>
+                      <div className="order-line-readonly mono order-line-subtotal">
+                        {formatEur(contribution?.net ?? line.qty * line.unitPrice)}
+                        {contribution && contribution.discountAmount > 0 ? (
+                          <span className="line-gross-hint">
+                            gross {formatEur(contribution.gross)}
+                          </span>
+                        ) : null}
+                      </div>
+                    </div>
+                    <div className="order-line-sph">
+                      <Input
+                        id={`sph-${line.id}`}
+                        label="SPH"
+                        type="number"
+                        step="0.25"
+                        value={Number.isFinite(line.sph) ? line.sph : 0}
+                        disabled={readOnly || !line.productId}
+                        onChange={(e) =>
+                          updateLine(line.id, { sph: Number(e.target.value) })
+                        }
+                      />
+                    </div>
+                    <div className="order-line-cyl">
+                      <Input
+                        id={`cyl-${line.id}`}
+                        label="CYL"
+                        type="number"
+                        step="0.25"
+                        value={Number.isFinite(line.cyl) ? line.cyl : 0}
+                        disabled={readOnly || !line.productId}
+                        onChange={(e) =>
+                          updateLine(line.id, { cyl: Number(e.target.value) })
+                        }
+                      />
+                    </div>
+                    <div className="order-line-qty">
+                      <Input
+                        id={`qty-${line.id}`}
+                        label="Qty"
+                        type="number"
+                        min={1}
+                        step={1}
+                        value={line.qty}
+                        disabled={readOnly}
+                        onChange={(e) =>
+                          updateLine(line.id, {
+                            qty: Math.max(1, Number(e.target.value) || 1),
+                          })
+                        }
+                      />
+                    </div>
+                    <div className="form-group order-line-quiet">
+                      <label className="order-line-label">Unit price</label>
                       <div className="order-line-readonly mono">
                         {formatEur(line.unitPrice)}
                       </div>
                     </div>
-                    <div className="form-group">
-                      <label className="order-line-label">Disc. %</label>
+                    <div className="form-group order-line-discount">
+                      <label className="order-line-label" htmlFor={`disc-${line.id}`}>
+                        Disc. %
+                      </label>
                       <input
                         id={`disc-${line.id}`}
                         type="number"
@@ -1010,30 +1138,6 @@ export function PedidoFormPage() {
                         </span>
                       ) : null}
                     </div>
-                    <div className="form-group">
-                      <label className="order-line-label">Subtotal</label>
-                      <div className="order-line-readonly mono order-line-subtotal">
-                        {formatEur(contribution?.net ?? line.qty * line.unitPrice)}
-                        {contribution && contribution.discountAmount > 0 ? (
-                          <span className="line-gross-hint">
-                            gross {formatEur(contribution.gross)}
-                          </span>
-                        ) : null}
-                      </div>
-                    </div>
-                    {!readOnly ? (
-                      <Button
-                        type="button"
-                        variant="danger"
-                        className="btn--sm order-line-remove"
-                        onClick={() => removeLine(line.id)}
-                        aria-label="Remove line"
-                      >
-                        ×
-                      </Button>
-                    ) : (
-                      <span />
-                    )}
                   </div>
                   )
                 })}
@@ -1085,13 +1189,18 @@ export function PedidoFormPage() {
                   </div>
                 </div>
               </div>
-            </div>
+            </motion.div>
           ) : (
-            <div
+            <motion.div
+              key="company"
               role="tabpanel"
               id="order-panel-company"
               aria-labelledby="order-tab-company"
               className="order-tab-panel"
+              initial={fade.initial}
+              animate={fade.animate}
+              exit={fade.exit}
+              transition={fade.transition}
             >
               <p className="form-section-label all-caps">
                 Company data on document (snapshot)
@@ -1143,8 +1252,48 @@ export function PedidoFormPage() {
                   }
                 />
               </div>
-            </div>
+              <p className="form-section-label all-caps">Bank details</p>
+              <div className="grid-2col">
+                <Input
+                  id="co-iban"
+                  label="IBAN"
+                  value={form.company.iban}
+                  disabled={readOnly}
+                  onChange={(e) =>
+                    patchForm({
+                      company: { ...form.company, iban: e.target.value },
+                    })
+                  }
+                />
+                <Input
+                  id="co-bank"
+                  label="Bank"
+                  value={form.company.bankName}
+                  disabled={readOnly}
+                  onChange={(e) =>
+                    patchForm({
+                      company: { ...form.company, bankName: e.target.value },
+                    })
+                  }
+                />
+              </div>
+              <Input
+                id="co-holder"
+                label="Account holder"
+                value={form.company.accountHolder}
+                disabled={readOnly}
+                onChange={(e) =>
+                  patchForm({
+                    company: {
+                      ...form.company,
+                      accountHolder: e.target.value,
+                    },
+                  })
+                }
+              />
+            </motion.div>
           )}
+          </AnimatePresence>
         </Card>
 
         <div className="order-side-column">
@@ -1162,7 +1311,7 @@ export function PedidoFormPage() {
                   </Button>
                   <Button
                     type="button"
-                    variant="info"
+                    variant="secondary"
                     disabled={saving}
                     onClick={() => void runConfirm(false)}
                   >
@@ -1171,7 +1320,7 @@ export function PedidoFormPage() {
                   {!isNew ? (
                     <Button
                       type="button"
-                      variant="danger"
+                      variant="ghost-danger"
                       disabled={saving}
                       onClick={() => void changeStatus('Cancelled')}
                     >
@@ -1193,7 +1342,7 @@ export function PedidoFormPage() {
                   </Button>
                   <Button
                     type="button"
-                    variant="success"
+                    variant="secondary"
                     disabled={saving}
                     onClick={() => void changeStatus('Completed')}
                   >
@@ -1201,7 +1350,7 @@ export function PedidoFormPage() {
                   </Button>
                   <Button
                     type="button"
-                    variant="danger"
+                    variant="ghost-danger"
                     disabled={saving}
                     onClick={() => void changeStatus('Cancelled')}
                   >

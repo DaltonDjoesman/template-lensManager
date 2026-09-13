@@ -1,7 +1,14 @@
 import { forwardRef, type ButtonHTMLAttributes, type ReactNode } from 'react'
 import './Button.css'
 
-type Variant = 'primary' | 'accent' | 'secondary' | 'success' | 'info' | 'danger'
+type Variant =
+  | 'primary'
+  | 'accent'
+  | 'secondary'
+  | 'success'
+  | 'info'
+  | 'danger'
+  | 'ghost-danger'
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: Variant

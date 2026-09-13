@@ -1,5 +1,11 @@
 export const THEME_STORAGE_KEY = 'lens-manager-theme'
 
+/** Hex of `--bg` for browser/PWA chrome. Keep in sync with `src/index.css`. */
+export const THEME_BG_HEX = {
+  light: '#F7F2EA',
+  dark: '#1D1710',
+} as const
+
 export type ThemePreference = 'system' | 'light' | 'dark'
 
 const VALID: ReadonlySet<string> = new Set(['system', 'light', 'dark'])
@@ -14,6 +20,31 @@ export function getThemePreference(): ThemePreference {
   return 'system'
 }
 
+export function resolveAppearance(
+  preference: ThemePreference = getThemePreference(),
+): 'light' | 'dark' {
+  if (preference === 'light' || preference === 'dark') return preference
+  return window.matchMedia('(prefers-color-scheme: dark)').matches
+    ? 'dark'
+    : 'light'
+}
+
+function syncThemeColorMeta(appearance: 'light' | 'dark'): void {
+  const metas = document.querySelectorAll('meta[name="theme-color"]')
+  metas.forEach((meta) => {
+    const media = meta.getAttribute('media')
+    if (!media) {
+      meta.setAttribute('content', THEME_BG_HEX[appearance])
+      return
+    }
+    if (media.includes('prefers-color-scheme: dark')) {
+      meta.setAttribute('content', THEME_BG_HEX.dark)
+    } else if (media.includes('prefers-color-scheme: light')) {
+      meta.setAttribute('content', THEME_BG_HEX.light)
+    }
+  })
+}
+
 export function applyThemePreference(
   preference: ThemePreference = getThemePreference(),
 ): void {
@@ -25,6 +56,7 @@ export function applyThemePreference(
     root.removeAttribute('data-theme')
     root.style.colorScheme = ''
   }
+  syncThemeColorMeta(resolveAppearance(preference))
 }
 
 export function setThemePreference(preference: ThemePreference): void {

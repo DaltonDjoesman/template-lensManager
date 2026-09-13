@@ -9,7 +9,7 @@ import type { CompanySettings } from '../types/companySettings'
 import { buildLineSku, type Order } from '../types/order'
 import type { Product } from '../types/product'
 
-export const SEED_VERSION = 2
+export const SEED_VERSION = 3
 
 /** localStorage key for first-run / wipe / restore marker. */
 export const DEMO_SEED_MARKER_KEY = 'lens-manager:demo-seed-marker'
@@ -70,6 +70,7 @@ export const SEED_CLIENTS: Client[] = [
       },
     ],
     defaultDiscount: { percent: 5 },
+    paymentTerms: 'net_30',
   },
   {
     id: 'seed-client-harbor',
@@ -94,6 +95,7 @@ export const SEED_CLIENTS: Client[] = [
       },
     ],
     defaultDiscount: { percent: 8, amountEur: 10 },
+    paymentTerms: 'net_30',
   },
   {
     id: 'seed-client-northglass',
@@ -118,6 +120,7 @@ export const SEED_CLIENTS: Client[] = [
       },
     ],
     defaultDiscount: {},
+    paymentTerms: 'a_pronto',
   },
   {
     id: 'seed-client-vista',
@@ -152,6 +155,7 @@ export const SEED_CLIENTS: Client[] = [
       },
     ],
     defaultDiscount: { amountEur: 15 },
+    paymentTerms: 'net_30',
   },
 ]
 
@@ -216,6 +220,7 @@ export const SEED_ORDERS: Order[] = [
     deliveryLocationId: aurora.deliveryLocations[0]!.id,
     orderDiscount: { ...aurora.defaultDiscount },
     clientDefaultDiscount: { ...aurora.defaultDiscount },
+    paymentTerms: aurora.paymentTerms,
     lines: [
       line('seed-line-d1', p0, -2.25, -1.0, 2),
       line('seed-line-d2', p2, -1.75, -0.5, 1, 10),
@@ -244,12 +249,14 @@ export const SEED_ORDERS: Order[] = [
     deliveryLocationId: harbor.deliveryLocations[0]!.id,
     orderDiscount: { ...harbor.defaultDiscount },
     clientDefaultDiscount: { ...harbor.defaultDiscount },
+    paymentTerms: harbor.paymentTerms,
     lines: [
       line('seed-line-c1', p2, -4.5, -1.25, 4),
       line('seed-line-c2', p4, -5.25, -2.5, 2),
     ],
     pedNumber: 'PED2608-0001',
     pfNumber: 'PF2608-0001',
+    pfIssuedAt: '2026-08-05T14:30:00.000Z',
     confirmedAt: '2026-08-05T14:22:00.000Z',
     createdAt: '2026-08-05T11:00:00.000Z',
     updatedAt: '2026-08-05T14:22:00.000Z',
@@ -275,12 +282,14 @@ export const SEED_ORDERS: Order[] = [
     deliveryLocationId: vista.deliveryLocations[1]!.id,
     orderDiscount: { ...vista.defaultDiscount },
     clientDefaultDiscount: { ...vista.defaultDiscount },
+    paymentTerms: vista.paymentTerms,
     lines: [
       line('seed-line-x1', p5, -8.0, -1.75, 3),
       line('seed-line-x2', p0, 2.0, -0.25, 6),
     ],
     pedNumber: 'PED2607-0003',
     pfNumber: 'PF2607-0002',
+    pfIssuedAt: '2026-07-28T16:10:00.000Z',
     confirmedAt: '2026-07-28T16:05:00.000Z',
     createdAt: '2026-07-28T10:30:00.000Z',
     updatedAt: '2026-07-30T09:00:00.000Z',
@@ -306,6 +315,7 @@ export const SEED_ORDERS: Order[] = [
     deliveryLocationId: north.deliveryLocations[0]!.id,
     orderDiscount: {},
     clientDefaultDiscount: {},
+    paymentTerms: north.paymentTerms,
     lines: [line('seed-line-n1', p0, -1.25, -0.5, 1)],
     createdAt: '2026-08-02T08:40:00.000Z',
     updatedAt: '2026-08-02T12:10:00.000Z',

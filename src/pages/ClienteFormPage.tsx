@@ -3,8 +3,10 @@ import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { ViewHeader } from '../components/ui/ViewHeader'
 import { Card } from '../components/ui/Card'
 import { Input, TextArea } from '../components/ui/Input'
+import { PostalCodeInput } from '../components/ui/PostalCodeInput'
 import { Button } from '../components/ui/Button'
 import {
+  DuplicateNifError,
   createClient,
   getClient,
   normalizePrimaryLocations,
@@ -17,6 +19,7 @@ import {
   type ClientDeliveryLocation,
   type ClientInput,
   type DefaultDiscount,
+  type PaymentTerms,
 } from '../types/client'
 import '../components/ui/Card.css'
 
@@ -110,6 +113,7 @@ export function ClienteFormPage() {
             ...loc,
           })),
           defaultDiscount: { ...client.defaultDiscount },
+          paymentTerms: client.paymentTerms,
         })
         setPercentInput(
           client.defaultDiscount.percent !== undefined
@@ -232,6 +236,7 @@ export function ClienteFormPage() {
         form.deliveryLocations.map((loc) => ({ ...loc })),
       ),
       defaultDiscount,
+      paymentTerms: form.paymentTerms,
     }
 
     setSaving(true)
@@ -255,6 +260,7 @@ export function ClienteFormPage() {
               ...loc,
             })),
             defaultDiscount: { ...saved.defaultDiscount },
+            paymentTerms: saved.paymentTerms,
           })
           setPercentInput(
             saved.defaultDiscount.percent !== undefined
@@ -271,9 +277,11 @@ export function ClienteFormPage() {
       }
     } catch (err) {
       setError(
-        err instanceof Error
+        err instanceof DuplicateNifError
           ? err.message
-          : 'Could not save the client.',
+          : err instanceof Error
+            ? err.message
+            : 'Could not save the client.',
       )
     } finally {
       setSaving(false)
@@ -358,7 +366,7 @@ export function ClienteFormPage() {
               id="client-email"
               label="Email Address"
               type="email"
-              placeholder="e.g. info@opticaleiria.pt"
+              placeholder="e.g. orders@optica.example"
               value={form.billing.email}
               onChange={(e) => updateBilling('email', e.target.value)}
               error={fieldErrors.email}
@@ -464,13 +472,12 @@ export function ClienteFormPage() {
                   </div>
 
                   <div className="grid-2col">
-                    <Input
+                    <PostalCodeInput
                       id={`client-loc-postal-${loc.id}`}
                       label="Postal Code"
-                      placeholder="e.g. 2400-123"
                       value={loc.postalCode}
-                      onChange={(e) =>
-                        updateLocation(loc.id, 'postalCode', e.target.value)
+                      onValueChange={(postalCode) =>
+                        updateLocation(loc.id, 'postalCode', postalCode)
                       }
                     />
                   </div>
@@ -497,6 +504,47 @@ export function ClienteFormPage() {
                   Add delivery location
                 </Button>
               </div>
+            </div>
+
+            <div className="form-section-label all-caps">Payment terms</div>
+            <p className="form-section-hint">
+              Default for new orders from this optician. Can be changed on each
+              order.
+            </p>
+            <div
+              className="theme-pref-group"
+              role="radiogroup"
+              aria-label="Payment terms"
+            >
+              {(
+                [
+                  { value: 'a_pronto', label: 'Due on receipt' },
+                  { value: 'net_30', label: 'Net 30' },
+                ] as const
+              ).map((option) => {
+                const active = form.paymentTerms === option.value
+                return (
+                  <button
+                    key={option.value}
+                    type="button"
+                    role="radio"
+                    aria-checked={active}
+                    className={
+                      active
+                        ? 'theme-pref-option theme-pref-option--active'
+                        : 'theme-pref-option'
+                    }
+                    onClick={() =>
+                      setForm((prev) => ({
+                        ...prev,
+                        paymentTerms: option.value as PaymentTerms,
+                      }))
+                    }
+                  >
+                    {option.label}
+                  </button>
+                )
+              })}
             </div>
 
             <div className="form-section-label all-caps">

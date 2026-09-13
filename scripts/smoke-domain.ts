@@ -63,6 +63,7 @@ async function main() {
       },
     ],
     defaultDiscount: { percent: 5 },
+    paymentTerms: 'net_30',
   })
   const client = await adapter.getDoc(STORAGE_COLLECTIONS.clients, clientId)
   assert(client?.billing && (client.billing as { name: string }).name === 'Optica Demo', 'client create')
@@ -76,6 +77,28 @@ async function main() {
     'client update',
   )
   console.log('OK clients CRUD')
+
+  console.log('=== 5.1b Unique NIF + payment terms ===')
+  const { createClient, DuplicateNifError } = await import('../src/lib/clients')
+  try {
+    await createClient({
+      billing: {
+        name: 'Duplicate Optic',
+        nif: 'PT123',
+        contactName: 'Ana',
+        phone: '123',
+        email: 'b@demo.test',
+        address: 'Street 2',
+      },
+      deliveryLocations: [],
+      defaultDiscount: {},
+      paymentTerms: 'a_pronto',
+    })
+    assert(false, 'duplicate NIF should throw')
+  } catch (err) {
+    assert(err instanceof DuplicateNifError, 'DuplicateNifError on create')
+  }
+  console.log('OK unique NIF')
 
   console.log('=== 5.2 Catalog CRUD ===')
   const productId = await adapter.createDoc(STORAGE_COLLECTIONS.products, {
@@ -153,9 +176,13 @@ async function main() {
       email: 'demo@lensmanager.example',
       mdrNote: 'MDR note',
       ivaNote: 'IVA note',
+      iban: 'PT50 0000 0000 0000 0000 0000 0',
+      bankName: 'Demo Bank',
+      accountHolder: 'Lens Manager Demo',
     },
     orderDiscount: { percent: 10 },
     clientDefaultDiscount: { percent: 5 },
+    paymentTerms: 'net_30',
     lines,
     createdAt: now,
     updatedAt: now,
@@ -209,6 +236,7 @@ async function main() {
     company: confirmed!.company as never,
     orderDiscount: { percent: 10 },
     clientDefaultDiscount: { percent: 5 },
+    paymentTerms: 'net_30',
     lines,
     pedNumber,
     createdAt: now,
@@ -219,14 +247,23 @@ async function main() {
   assert(Array.isArray(def.content), 'pdf content')
   const json = JSON.stringify(def)
   assert(!json.includes('SEKAI'), 'no SEKAI in PDF')
-  assert(json.includes('CUSTOMER ORDER') || json.includes('Lens Manager'), 'english labels')
+  assert(!json.includes('Fukujin'), 'no Fukujin in PDF')
+  assert(!json.includes('sekaioptical'), 'no sekaioptical in PDF')
+  assert(!json.includes('519165780'), 'no source-product NIF in PDF')
+  assert(!json.includes('0007 0000 0085 3635'), 'no source-product IBAN in PDF')
+  assert(json.includes('ORDER') || json.includes('Lens Manager'), 'english labels')
+  assert(json.includes('Net 30'), 'payment badge on order PDF')
+  assert(!json.includes('Payment terms and bank details'), 'no bank block on order PDF')
   const pfSeq = await adapter.allocateCounter('pf', '2608')
   const pfNumber = `PF-2608${String(pfSeq).padStart(4, '0')}`
   const proforma = buildOrderPdfDefinition(
-    { ...pdfOrder, pfNumber },
+    { ...pdfOrder, pfNumber, pfIssuedAt: now },
     'proforma',
   )
-  assert(JSON.stringify(proforma).includes('PROFORMA'), 'proforma label')
+  const pfJson = JSON.stringify(proforma)
+  assert(pfJson.includes('PROFORMA'), 'proforma label')
+  assert(pfJson.includes('Payment terms and bank details'), 'bank block on proforma')
+  assert(pfJson.includes('Demo Bank'), 'demo bank fallback')
   console.log('OK PDF definitions', { pfNumber })
 
   console.log('=== 5.5 Sales-by-SKU ===')

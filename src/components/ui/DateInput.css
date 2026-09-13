@@ -1,0 +1,52 @@
+.date-input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.date-input-text {
+  padding-right: 44px;
+}
+
+.date-input-native {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.date-input-calendar {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 36px;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  transition: var(--transition-chrome, var(--transition));
+}
+
+.date-input-calendar:hover:not(:disabled) {
+  color: var(--fg);
+  background-color: color-mix(in oklch, var(--fg) 6%, transparent);
+}
+
+.date-input-calendar:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .date-input-calendar {
+    transition: none;
+  }
+}

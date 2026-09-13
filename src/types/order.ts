@@ -1,4 +1,4 @@
-import type { ClientBilling, DefaultDiscount } from './client'
+import type { ClientBilling, DefaultDiscount, PaymentTerms } from './client'
 import type { CompanySettings } from './companySettings'
 
 /** Storage collection key: orders/{orderId} */
@@ -67,9 +67,13 @@ export interface Order {
   orderDiscount: DefaultDiscount
   /** Client default discount snapshotted when the client was selected (audit only). */
   clientDefaultDiscount: DefaultDiscount
+  /** Seeded from the client; overridable on this order. */
+  paymentTerms: PaymentTerms
   lines: OrderLine[]
   pedNumber?: string
   pfNumber?: string
+  /** ISO datetime of first proforma generation; reused on regenerations. */
+  pfIssuedAt?: string
   createdAt: string
   updatedAt: string
   confirmedAt?: string
@@ -77,11 +81,18 @@ export interface Order {
 
 export type OrderInput = Omit<
   Order,
-  'id' | 'createdAt' | 'updatedAt' | 'pedNumber' | 'pfNumber' | 'confirmedAt'
+  | 'id'
+  | 'createdAt'
+  | 'updatedAt'
+  | 'pedNumber'
+  | 'pfNumber'
+  | 'confirmedAt'
+  | 'pfIssuedAt'
 > & {
   pedNumber?: string
   pfNumber?: string
   confirmedAt?: string
+  pfIssuedAt?: string
 }
 
 export const EMPTY_SHIPPING_SNAPSHOT: OrderShippingSnapshot = {
