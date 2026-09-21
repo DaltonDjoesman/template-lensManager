@@ -1,12 +1,16 @@
 # Lens Manager
 
-Portfolio demo PWA for **lens order management** — clients with delivery locations, a SPH/CYL catalog, order lifecycle (draft → confirm → complete), proforma PDFs, and a sales-by-SKU report. Data lives in the browser; no backend or login required.
+<p align="center">
+  <img src="docs/banner.svg" alt="Lens Manager — clients, SPH/CYL catalog, orders, and proforma PDFs." width="100%">
+</p>
+
+PWA for **optical lens orders** — clients with delivery locations, a SPH/CYL catalog, order lifecycle (draft → confirm → complete), proforma PDFs, and a sales-by-SKU report. Data lives in the browser; no backend or login required.
 
 **Live demo:** [daltondjoesman.github.io/template-lensManager](https://daltondjoesman.github.io/template-lensManager/)
 
 ## Why
 
-Optical wholesale and lab workflows need a clear path from client → catalog SKU → confirmed order → printable document. This template shows that domain end-to-end as a self-contained demo you can open, explore, wipe, and restore — useful as a portfolio piece and as a starting point for a production adapter.
+Optical wholesale and lab workflows need a clear path from client → catalog SKU → confirmed order → printable document. This app runs that path end-to-end. Open the [live demo](https://daltondjoesman.github.io/template-lensManager/), explore the seed, wipe it, or restore it. Screens talk to a `StorageAdapter`, so a production backend replaces one module and leaves the domain code in place.
 
 ## Features
 
@@ -48,8 +52,6 @@ Still of the generated proforma:
 | Offline / install | vite-plugin-pwa |
 | Persistence | `LocalStorageAdapter` implementing `StorageAdapter` |
 | Lint | oxlint |
-
-**Tooling used to build this:** [Cursor](https://cursor.com) (IDE + agents), [OpenSpec](https://github.com/Fission-AI/OpenSpec) for change proposals / specs / tasks, and the Vite React TypeScript toolchain above.
 
 ## Architecture
 
@@ -112,16 +114,16 @@ The demo uses `LocalStorageAdapter`. For multi-user sync:
 
 A short sketch of this swap already lives as comments on the storage index module.
 
-## AI-assisted development
+## Tooling
 
-This project was built with assistance from **Grok 4.5** and **Composer 2.5** inside Cursor. Change proposals were drafted locally with OpenSpec; those files are not in this repository. Architecture choices, product decisions, and final review remain author-owned — the models accelerated scaffolding and iteration; they did not replace product judgment.
+Built in [Cursor](https://cursor.com). Models helped with scaffolding and iteration. Domain rules, the storage boundary, and the final review are the author's.
 
 ## What I'd build next
 
 - Firebase Auth + Firestore adapter behind a feature flag
 - Soft deletes / audit trail on order status changes
 - Better mobile order-entry ergonomics (SPH/CYL steppers, barcode SKU scan)
-- Hosted demo URL with a pinned seed reset schedule
+- A public reset of the [live demo](https://daltondjoesman.github.io/template-lensManager/) seed on a schedule
 
 ## License
 
