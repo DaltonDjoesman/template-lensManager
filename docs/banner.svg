@@ -1,22 +1,18 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="360" viewBox="0 0 1280 360" role="img" aria-labelledby="title desc">
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="220" viewBox="0 0 1280 220" role="img" aria-labelledby="title desc">
   <title id="title">Lens Manager</title>
-  <desc id="desc">Optical lens orders, an SPH/CYL catalog, and proforma PDFs in the browser.</desc>
-  <rect width="1280" height="360" fill="#f4efe6"/>
-  <rect width="8" height="360" fill="#b45309"/>
-  <circle cx="1040" cy="180" r="92" fill="none" stroke="#d6c4a3" stroke-width="10"/>
-  <circle cx="1040" cy="180" r="46" fill="none" stroke="#c4a574" stroke-width="6"/>
-  <circle cx="1024" cy="164" r="10" fill="#fff7ed" opacity="0.9"/>
-  <g font-family="Segoe UI, Ubuntu, sans-serif">
-    <text x="72" y="118" fill="#9a3412" font-size="16" letter-spacing="3">PWA / BROWSER ONLY</text>
-    <text x="72" y="188" fill="#1c1917" font-size="64" font-weight="700">Lens Manager</text>
-    <text x="72" y="236" fill="#57534e" font-size="22">Clients, SPH/CYL catalog, orders, and proforma PDFs.</text>
+  <desc id="desc">A lens beside a short order card, on a paper background.</desc>
+  <rect width="1280" height="220" fill="#f4efe6"/>
+  <rect width="8" height="220" fill="#b45309"/>
+  <g transform="translate(210 110)">
+    <circle r="72" fill="none" stroke="#d6c4a3" stroke-width="10"/>
+    <circle r="34" fill="none" stroke="#c4a574" stroke-width="6"/>
+    <circle cx="-12" cy="-12" r="8" fill="#fff7ed"/>
   </g>
-  <g font-family="Segoe UI, Ubuntu, sans-serif" font-size="15" fill="#44403c">
-    <rect x="72" y="272" width="78" height="32" rx="16" fill="#efe6d6"/>
-    <text x="111" y="293" text-anchor="middle">React</text>
-    <rect x="162" y="272" width="118" height="32" rx="16" fill="#efe6d6"/>
-    <text x="221" y="293" text-anchor="middle">TypeScript</text>
-    <rect x="292" y="272" width="64" height="32" rx="16" fill="#efe6d6"/>
-    <text x="324" y="293" text-anchor="middle">PWA</text>
+  <g transform="translate(760 28)">
+    <rect width="360" height="164" rx="14" fill="#fffaf3" stroke="#e7dcc8"/>
+    <rect x="28" y="28" width="180" height="12" rx="6" fill="#e7dcc8"/>
+    <rect x="28" y="56" width="300" height="10" rx="5" fill="#f0e6d6"/>
+    <rect x="28" y="78" width="240" height="10" rx="5" fill="#f0e6d6"/>
+    <rect x="28" y="112" width="110" height="28" rx="8" fill="#b45309"/>
   </g>
 </svg>

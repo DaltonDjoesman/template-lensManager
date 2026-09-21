@@ -1,10 +1,12 @@
-# Lens Manager
-
 <p align="center">
-  <img src="docs/banner.svg" alt="Lens Manager — clients, SPH/CYL catalog, orders, and proforma PDFs." width="100%">
+  <img src="docs/banner.svg" alt="" width="100%">
 </p>
 
-PWA for **optical lens orders** — clients with delivery locations, a SPH/CYL catalog, order lifecycle (draft → confirm → complete), proforma PDFs, and a sales-by-SKU report. Data lives in the browser; no backend or login required.
+# Lens Manager
+
+Optical lens orders in the browser: clients, an SPH/CYL catalog, and proforma PDFs.
+
+Clients, delivery locations, order lifecycle (draft → confirm → complete), and a sales-by-SKU report. No backend or login required.
 
 **Live demo:** [daltondjoesman.github.io/template-lensManager](https://daltondjoesman.github.io/template-lensManager/)
 
