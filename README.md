@@ -122,3 +122,7 @@ This project was built with assistance from **Grok 4.5** and **Composer 2.5** in
 - Soft deletes / audit trail on order status changes
 - Better mobile order-entry ergonomics (SPH/CYL steppers, barcode SKU scan)
 - Hosted demo URL with a pinned seed reset schedule
+
+## License
+
+[MIT](LICENSE)
