@@ -114,7 +114,7 @@ A short sketch of this swap already lives as comments on the storage index modul
 
 ## AI-assisted development
 
-This project was built with assistance from **Grok 4.5** and **Composer 2.5** inside Cursor, guided by OpenSpec change artifacts (proposal → specs → design → tasks). Architecture choices, product decisions, and final review remain author-owned — the models accelerated scaffolding and iteration; they did not replace product judgment.
+This project was built with assistance from **Grok 4.5** and **Composer 2.5** inside Cursor. Change proposals were drafted locally with OpenSpec; those files are not in this repository. Architecture choices, product decisions, and final review remain author-owned — the models accelerated scaffolding and iteration; they did not replace product judgment.
 
 ## What I'd build next
 
