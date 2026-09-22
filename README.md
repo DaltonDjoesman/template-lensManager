@@ -4,7 +4,8 @@
 
 Optical lens orders in the browser: clients, an SPH/CYL catalog, order lifecycle, and proforma PDFs. No backend or login required.
 
-**Live demo:** [daltondjoesman.github.io/template-lensManager](https://daltondjoesman.github.io/template-lensManager/)
+**Live demo:** [daltondjoesman.github.io/template-lensManager](https://daltondjoesman.github.io/template-lensManager/)  
+**Portfolio:** [daltondjoesman.github.io](https://daltondjoesman.github.io)
 
 ## Why
 
