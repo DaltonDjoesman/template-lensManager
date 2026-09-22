@@ -1,12 +1,8 @@
 <p align="center">
-  <img src="docs/banner.svg" alt="" width="100%">
+  <img src="docs/banner.svg" alt="Lens Manager" width="100%">
 </p>
 
-# Lens Manager
-
-Optical lens orders in the browser: clients, an SPH/CYL catalog, and proforma PDFs.
-
-Clients, delivery locations, order lifecycle (draft → confirm → complete), and a sales-by-SKU report. No backend or login required.
+Optical lens orders in the browser: clients, an SPH/CYL catalog, order lifecycle, and proforma PDFs. No backend or login required.
 
 **Live demo:** [daltondjoesman.github.io/template-lensManager](https://daltondjoesman.github.io/template-lensManager/)
 
